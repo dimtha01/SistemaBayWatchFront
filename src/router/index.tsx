@@ -13,6 +13,7 @@ import { LoginPage } from "@/pages/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import RoomDetailsPage from "@/pages/RoomDetailsPage";
 import { FullMenuPage } from "@/pages/FullMenuPage";
+import { AboutUsGaleryPage } from "@/pages/AboutUsGaleryPage";
 
 // Configuración de rutas
 export const router = createBrowserRouter([
@@ -69,6 +70,10 @@ export const router = createBrowserRouter([
       {
         path: "fullMenu",
         element: <FullMenuPage />,
+      },
+      {
+        path: "aboutUsGalery",
+        element: <AboutUsGaleryPage />,
       },
     ],
   },

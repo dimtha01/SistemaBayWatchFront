@@ -17,8 +17,8 @@ const menusData = [
     description:
       "Descubre nuestra selección de platos de autor, con opciones para todos los gustos.",
     icon: ChefHat,
-    color: "bg-orange-50 border-orange-200",
-    iconColor: "text-orange-600",
+    color: "bg-red-50 border-red-200",
+    iconColor: "text-red-600",
     items: [
       {
         category: "Entradas",
@@ -56,8 +56,8 @@ const menusData = [
     description:
       "Una cuidada selección de vinos nacionales e internacionales, cervezas artesanales y cócteles de autor.",
     icon: Wine,
-    color: "bg-purple-50 border-purple-200",
-    iconColor: "text-purple-600",
+    color: "bg-red-50 border-red-200",
+    iconColor: "text-red-600",
     items: [
       {
         category: "Vinos Tintos",
@@ -91,8 +91,8 @@ const menusData = [
     subtitle: "Opciones Matutinas",
     description: "Opciones frescas y variadas para empezar el día con energía.",
     icon: Coffee,
-    color: "bg-amber-50 border-amber-200",
-    iconColor: "text-amber-600",
+    color: "bg-red-50 border-red-200",
+    iconColor: "text-red-600",
     items: [
       {
         category: "Panadería",
@@ -124,8 +124,8 @@ export const RestaurantMenusSection = () => {
       <div className="max-w-7xl mx-auto px-6">
         {/* Header Section */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-6">
-            <ChefHat className="w-8 h-8 text-orange-600" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-6">
+            <ChefHat className="w-8 h-8 text-red-600" />
           </div>
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
             Nuestros Menús
@@ -202,7 +202,7 @@ export const RestaurantMenusSection = () => {
                                   key={dishIndex}
                                   className="flex items-center text-gray-700 text-sm"
                                 >
-                                  <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mr-3 flex-shrink-0"></div>
+                                  <div className="w-1.5 h-1.5 bg-red-400 rounded-full mr-3 flex-shrink-0"></div>
                                   <span className="leading-relaxed">
                                     {dish}
                                   </span>
@@ -223,7 +223,7 @@ export const RestaurantMenusSection = () => {
         {/* Call to Action */}
         <div className="text-center mt-16">
           <div className="inline-flex flex-col sm:flex-row gap-4">
-            <Link to='/fullMenu' className="px-8 py-3 bg-orange-600 text-white font-semibold rounded-lg hover:bg-orange-700 transition-colors duration-200 shadow-lg hover:shadow-xl">
+            <Link to='/fullMenu' className="px-8 py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors duration-200 shadow-lg hover:shadow-xl">
               Ver Carta Completa
             </Link>
             <button className="px-8 py-3 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-200">

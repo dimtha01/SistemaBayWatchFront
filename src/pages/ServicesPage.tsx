@@ -2,7 +2,6 @@ import { Header } from "../components/Header/Header";
 import { ServicesHero } from "../components/ServicesHero/ServicesHero";
 import { CategorizedServicesSection } from "../components/CategorizedServicesSection/CategorizedServicesSection";
 import { PremiumServicesSection } from "../components/PremiumServicesSection/PremiumServicesSection";
-import { FAQSection } from "../components/FAQSection/FAQSection"; // Importar la nueva sección
 
 export const ServicesPage = () => {
   return (
@@ -12,7 +11,6 @@ export const ServicesPage = () => {
       <main className="relative z-10">
         <CategorizedServicesSection />
         <PremiumServicesSection />
-        <FAQSection /> {/* Añadir la sección de Preguntas Frecuentes */}
       </main>
     </div>
   );

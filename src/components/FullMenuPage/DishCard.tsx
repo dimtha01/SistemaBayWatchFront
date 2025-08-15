@@ -20,8 +20,8 @@ export const DishCard: React.FC<DishCardProps> = ({
   onToggleFavorite,
   onToggleCart,
 }) => (
-  <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 shadow-md">
-    <div className="relative overflow-hidden">
+  <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-0 shadow-md h-full flex flex-col overflow-hidden">
+    <div className="relative">
       <img
         src={dish.image}
         alt={dish.name}
@@ -42,7 +42,7 @@ export const DishCard: React.FC<DishCardProps> = ({
         </button>
       </div>
 
-      <div className="absolute top-3 left-3 flex flex-col space-y-1">
+      <div className="absolute top-3 left-3 flex flex-col space-y-1 min-h-[60px]">
         {dish.isVegetarian && (
           <Badge className="bg-green-500/90 text-white text-xs backdrop-blur-sm">
             Vegetariano
@@ -61,21 +61,26 @@ export const DishCard: React.FC<DishCardProps> = ({
       </div>
     </div>
 
-    <CardContent className="p-4 sm:p-6">
-      <div className="flex justify-between items-start mb-3">
-        <h4 className="font-bold text-lg sm:text-xl text-gray-900 group-hover:text-orange-600 transition-colors leading-tight">
+    <CardContent className="p-4 sm:p-6 flex-1 flex flex-col">
+      {/* Título y precio con altura fija */}
+      <div className="flex justify-between items-center mb-3 min-h-[32px] gap-2">
+        <h4 className="font-bold text-base sm:text-lg text-gray-900 group-hover:text-orange-600 transition-colors flex-1 truncate">
           {dish.name}
         </h4>
-        <span className="text-xl sm:text-2xl font-bold text-orange-600 ml-2 flex-shrink-0">
+        <span className="text-lg sm:text-xl font-bold text-orange-600 flex-shrink-0">
           {dish.price}
         </span>
       </div>
 
-      <p className="text-gray-600 text-sm sm:text-base mb-4 leading-relaxed line-clamp-2">
-        {dish.description}
-      </p>
+      {/* Descripción con altura fija */}
+      <div className="mb-4 flex-1">
+        <p className="text-gray-600 text-sm sm:text-base leading-relaxed h-[40px] sm:h-[48px] overflow-hidden line-clamp-2">
+          {dish.description}
+        </p>
+      </div>
 
-      <div className="flex items-center justify-between mb-6">
+      {/* Información adicional con altura fija */}
+      <div className="flex items-center justify-between mb-6 h-[20px]">
         <div className="flex items-center space-x-3 sm:space-x-4 text-sm text-gray-500">
           <div className="flex items-center space-x-1">
             <Clock className="w-4 h-4" />
@@ -90,18 +95,21 @@ export const DishCard: React.FC<DishCardProps> = ({
         </div>
       </div>
 
-      <Button
-        onClick={() => onToggleCart(dish.id)}
-        className={`w-full transition-all duration-200 font-semibold py-2.5 sm:py-3 ${
-          isInCart
-            ? "bg-green-600 hover:bg-green-700 shadow-lg"
-            : "bg-orange-600 hover:bg-orange-700 shadow-lg hover:shadow-xl"
-        }`}
-        size="lg"
-      >
-        <ShoppingCart className="w-4 h-4 mr-2" />
-        {isInCart ? "✓ Añadido" : "Añadir al Pedido"}
-      </Button>
+      {/* Botón al final */}
+      <div className="mt-auto">
+        <Button
+          onClick={() => onToggleCart(dish.id)}
+          className={`w-full transition-all duration-200 font-semibold py-2.5 sm:py-3 ${
+            isInCart
+              ? "bg-green-600 hover:bg-green-700 shadow-lg"
+              : "bg-orange-600 hover:bg-orange-700 shadow-lg hover:shadow-xl"
+          }`}
+          size="lg"
+        >
+          <ShoppingCart className="w-4 h-4 mr-2" />
+          {isInCart ? "✓ Añadido" : "Añadir al Pedido"}
+        </Button>
+      </div>
     </CardContent>
   </Card>
 );

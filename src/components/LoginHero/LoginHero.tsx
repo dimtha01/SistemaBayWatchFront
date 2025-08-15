@@ -1,72 +1,100 @@
-import { ArrowDown, Sparkles, Shield } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowDown, Sparkles, Shield, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export const LoginHero = () => {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setIsLoaded(true), 100);
+    return () => clearTimeout(timeout);
+  }, []);
+
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden">
+    <section className="relative min-h-screen max-h-[1200px] h-screen flex items-center justify-center overflow-hidden py-8 sm:py-12 md:py-16 lg:py-20">
       {/* Imagen de fondo */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: "url('/images/imagen de login banner.webp')", // 📌 Ruta de tu imagen
+          backgroundImage: "url('/images/imagen de login banner.webp')",
           backgroundSize: "cover",
-          backgroundPosition: "center top", // Ajusta según necesites
+          backgroundPosition: "center top",
+          backgroundAttachment: "fixed", // Opcional: da efecto parallax
         }}
       >
         {/* Overlay para mejorar legibilidad */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/80"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/80"></div>
       </div>
 
-      {/* Contenido principal */}
-      <div className="relative z-10 px-6 max-w-4xl mx-auto text-center">
-        {/* Icono con efecto premium */}
-        <div className="mb-8 flex justify-center">
-          <div className="relative">
-            <div className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-3xl flex items-center justify-center mb-4 shadow-xl border border-[#F20C1F] hover:border-[#F20C0C] transition-all">
-              <Shield className="w-10 h-10 text-[#F20C1F]" />
+      {/* Contenido principal - Centrado con padding-top para evitar header */}
+      <div className="relative z-10 w-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pt-24 sm:pt-28 md:pt-32 lg:pt-20">
+        <div className="max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-3xl xl:max-w-4xl mx-auto text-center">
+        
+          {/* 🍞 MIGAJAS/BREADCRUMBS */}
+          <div
+            className={`mb-6 sm:mb-8 md:mb-10 flex justify-center transform transition-all duration-1000 delay-100 ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+              }`}
+          >
+            <div className="inline-flex items-center px-3 sm:px-4 py-2 bg-white/15 backdrop-blur-md rounded-full text-white/90 text-xs sm:text-sm border border-white/20">
+              <Link to="/" className="hover:text-white transition-colors">
+                Inicio
+              </Link>
+              <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mx-2 sm:mx-3 rotate-[-90deg]" />
+              <span className="text-white font-medium">Iniciar Sesión</span>
             </div>
-            <div className="absolute -top-2 -right-2 bg-white/20 rounded-full p-1 shadow-md">
-              <Sparkles className="w-5 h-5 text-[#F2E205] animate-pulse" />
-            </div>
           </div>
-        </div>
 
-        {/* Título principal */}
-        <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 leading-tight">
-          <span className="block">Bienvenido</span>
-          <span className="block bg-gradient-to-r from-[#F20C1F] to-[#F20C0C] bg-clip-text text-transparent">
-            de Vuelta
-          </span>
-        </h1>
+          {/* Título principal */}
+          <h1
+            className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 md:mb-8 leading-tight transform transition-all duration-1000 delay-400 ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+              }`}
+          >
+            <span className="block">Bienvenido</span>
+            <span className="block bg-gradient-to-r from-[#F20C1F] to-[#F20C0C] bg-clip-text text-transparent">
+              de Vuelta
+            </span>
+          </h1>
 
-        {/* Subtítulo */}
-        <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
-          Accede a tu cuenta para gestionar tus reservas y disfrutar de una
-          experiencia personalizada
-        </p>
-
-        {/* Características destacadas */}
-        <div className="flex flex-wrap justify-center gap-5 mb-12">
-          <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-5 py-2.5 border border-[#F20C1F] shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
-            <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-white font-medium text-sm">Acceso Seguro</span>
-          </div>
-          <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-5 py-2.5 border border-[#F20C1F] shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
-            <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse delay-300"></div>
-            <span className="text-white font-medium text-sm">Gestión Fácil</span>
-          </div>
-          <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-5 py-2.5 border border-[#F20C1F] shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
-            <div className="w-2.5 h-2.5 bg-yellow-500 rounded-full animate-pulse delay-600"></div>
-            <span className="text-white font-medium text-sm">Experiencia Premium</span>
-          </div>
-        </div>
-
-        {/* Flecha animada */}
-        <div className="flex flex-col items-center">
-          <p className="text-white/80 text-sm mb-3 font-medium">
-            Continúa para iniciar sesión
+          {/* Subtítulo */}
+          <p
+            className={`text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 mb-8 sm:mb-10 md:mb-12 max-w-xs sm:max-w-sm md:max-w-2xl lg:max-w-3xl mx-auto leading-relaxed transform transition-all duration-1000 delay-600 ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+              }`}
+          >
+            Accede a tu cuenta para gestionar tus reservas y disfrutar de una
+            experiencia personalizada
           </p>
-          <div className="animate-bounce">
-            <ArrowDown className="w-6 h-6 text-[#F20C1F]" />
+
+          {/* Características destacadas */}
+          <div
+            className={`flex flex-col sm:flex-row flex-wrap justify-center items-center gap-3 sm:gap-4 md:gap-5 mb-8 sm:mb-10 md:mb-12 transform transition-all duration-1000 delay-800 ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+              }`}
+          >
+            {[
+              { color: "bg-green-500", text: "Acceso Seguro", delay: "delay-0" },
+              { color: "bg-blue-500", text: "Gestión Fácil", delay: "delay-300" },
+              { color: "bg-yellow-500", text: "Experiencia Premium", delay: "delay-600" },
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center space-x-2 sm:space-x-3 bg-white/10 backdrop-blur-sm rounded-full px-4 sm:px-5 md:px-6 py-2.5 sm:py-3 md:py-3.5 border border-white/20 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+              >
+                <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${item.color} rounded-full animate-pulse ${item.delay}`}></div>
+                <span className="text-white font-medium text-sm sm:text-base">{item.text}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Flecha animada transparente */}
+          <div
+            className={`flex flex-col items-center transform transition-all duration-1000 delay-1200 ${isLoaded ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+              }`}
+          >
+            <p className="text-white/80 text-sm sm:text-base mb-3 sm:mb-4 font-medium">
+              Continúa para iniciar sesión
+            </p>
+            <div className="animate-bounce opacity-60 hover:opacity-100 transition-opacity duration-300">
+              <ArrowDown className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white/70" />
+            </div>
           </div>
         </div>
       </div>

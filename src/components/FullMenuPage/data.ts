@@ -1,5 +1,5 @@
 import { ChefHat, Wine, Coffee } from "lucide-react";
-import { MenuData, FilterOption, FilterType } from "./types";
+import { type MenuData, type FilterOption } from "./types";
 
 export const fullMenuData: MenuData = {
   "menu-principal": {
@@ -24,7 +24,8 @@ export const fullMenuData: MenuData = {
             rating: 4.8,
             isVegetarian: true,
             isGlutenFree: true,
-            image: "/api/placeholder/300/200",
+            image:
+              "/images/ensalada-caprese-tomates-maduros-queso-mozzarella-hojas-albahaca-fresca-166116-3714.webp",
           },
           {
             id: "e2",
@@ -35,7 +36,7 @@ export const fullMenuData: MenuData = {
             rating: 4.9,
             isVegetarian: false,
             isGlutenFree: true,
-            image: "/api/placeholder/300/200",
+            image: "/images/Carpaccio de Pulpo.webp",
           },
           {
             id: "e3",
@@ -47,7 +48,7 @@ export const fullMenuData: MenuData = {
             rating: 4.6,
             isVegetarian: true,
             isGlutenFree: false,
-            image: "/api/placeholder/300/200",
+            image: "/images/Sopa de Cebolla Gratinada.webp",
           },
         ],
       },
@@ -65,7 +66,7 @@ export const fullMenuData: MenuData = {
             rating: 4.9,
             isVegetarian: false,
             isGlutenFree: true,
-            image: "/api/placeholder/300/200",
+            image: "/images/Salmón a la Plancha con Espárragos.webp",
           },
           {
             id: "pf2",
@@ -77,7 +78,8 @@ export const fullMenuData: MenuData = {
             rating: 5.0,
             isVegetarian: false,
             isGlutenFree: true,
-            image: "/api/placeholder/300/200",
+            image:
+              "/images/Solomillo de Ternera con Reducción de Vino Tinto.webp",
           },
           {
             id: "pf3",
@@ -88,7 +90,7 @@ export const fullMenuData: MenuData = {
             rating: 4.7,
             isVegetarian: true,
             isGlutenFree: false,
-            image: "/api/placeholder/300/200",
+            image: "/images/Risotto de Setas Silvestres.webp",
           },
           {
             id: "pf4",
@@ -101,7 +103,7 @@ export const fullMenuData: MenuData = {
             isVegetarian: false,
             isGlutenFree: true,
             isSpicy: true,
-            image: "/api/placeholder/300/200",
+            image: "/images/Paella Valenciana.webp",
           },
         ],
       },
@@ -119,7 +121,7 @@ export const fullMenuData: MenuData = {
             rating: 4.8,
             isVegetarian: true,
             isGlutenFree: false,
-            image: "/api/placeholder/300/200",
+            image: "/images/Tarta de Queso con Frutos Rojos.webp",
           },
           {
             id: "p2",
@@ -131,7 +133,7 @@ export const fullMenuData: MenuData = {
             rating: 4.9,
             isVegetarian: true,
             isGlutenFree: false,
-            image: "/api/placeholder/300/200",
+            image: "/images/Brownie.webp",
           },
           {
             id: "p3",
@@ -142,7 +144,8 @@ export const fullMenuData: MenuData = {
             rating: 4.6,
             isVegetarian: true,
             isGlutenFree: true,
-            image: "/api/placeholder/300/200",
+            image:
+              "/images/Ligera mousse tropical con crujiente de galleta.webp",
           },
         ],
       },
@@ -169,7 +172,7 @@ export const fullMenuData: MenuData = {
             rating: 4.7,
             isVegetarian: true,
             isGlutenFree: true,
-            image: "/api/placeholder/300/200",
+            image: "/images/Rioja Crianza.webp",
           },
           {
             id: "vt2",
@@ -180,7 +183,7 @@ export const fullMenuData: MenuData = {
             rating: 4.9,
             isVegetarian: true,
             isGlutenFree: true,
-            image: "/api/placeholder/300/200",
+            image: "/images/Ribera del Duero Reserva.webp",
           },
         ],
       },
@@ -197,7 +200,7 @@ export const fullMenuData: MenuData = {
             rating: 4.6,
             isVegetarian: true,
             isGlutenFree: true,
-            image: "/api/placeholder/300/200",
+            image: "/images/albadoriño.webp",
           },
         ],
       },
@@ -223,7 +226,7 @@ export const fullMenuData: MenuData = {
             time: "Inmediato",
             rating: 4.5,
             isVegetarian: true,
-            image: "/api/placeholder/300/200",
+            image: "/images/Croissants.webp",
           },
           {
             id: "pan2",
@@ -233,7 +236,7 @@ export const fullMenuData: MenuData = {
             time: "Inmediato",
             rating: 4.7,
             isVegetarian: true,
-            image: "/api/placeholder/300/200",
+            image: "/images/Pan artesanal con masa madre natural.webp",
           },
           {
             id: "pan3",
@@ -243,7 +246,7 @@ export const fullMenuData: MenuData = {
             time: "Inmediato",
             rating: 4.4,
             isVegetarian: true,
-            image: "/api/placeholder/300/200",
+            image: "/images/Esponjosos muffins con arándanos frescos.webp",
           },
         ],
       },
@@ -260,7 +263,7 @@ export const fullMenuData: MenuData = {
             rating: 4.6,
             isVegetarian: true,
             isGlutenFree: true,
-            image: "/api/placeholder/300/200",
+            image: "/images/Bowl de Frutas de Temporada.webp",
           },
           {
             id: "fy2",
@@ -271,7 +274,7 @@ export const fullMenuData: MenuData = {
             rating: 4.5,
             isVegetarian: true,
             isGlutenFree: true,
-            image: "/api/placeholder/300/200",
+            image: "/images/Yogur cremoso con miel de lavanda y nueces.webp",
           },
         ],
       },
