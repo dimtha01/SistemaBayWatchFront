@@ -1,6 +1,5 @@
+import { LoginForm, LoginHero } from "@/modules/auth";
 import { Header } from "../components/Header/Header";
-import { LoginHero } from "../components/LoginHero/LoginHero";
-import { LoginForm } from "../components/LoginForm/LoginForm";
 
 export const LoginPage = () => {
   return (

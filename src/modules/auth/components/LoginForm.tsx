@@ -1,25 +1,37 @@
-import React, { useState } from "react";
+"use client";
+
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from 'react-router-dom';
 
 export const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const { login, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError(null);
 
-    // Simular llamada a API
-    setTimeout(() => {
-      console.log("Login intentado con:", { email, password });
-      setIsLoading(false);
-    }, 1500);
+    try {
+      await login({ email, password });
+      navigate('/'); // Redirige a la página de inicio después del login
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Ocurrió un error inesperado.");
+      }
+    }
   };
 
   return (
@@ -117,6 +129,8 @@ export const LoginForm = () => {
                 ¿Olvidaste tu contraseña?
               </a>
             </div>
+
+            {error && <p className="text-sm text-red-600 text-center">{error}</p>}
 
             {/* Botón de submit */}
             <Button

@@ -9,11 +9,11 @@ import { GastronomyPage } from "@/pages/GastronomyPage";
 import { RoomsAndSuitesPage } from "@/pages/RoomsAndSuitesPage";
 import { MainLayout } from "@/layouts/MainLayout";
 import { ErrorPage } from "@/pages/ErrorPage";
-import { LoginPage } from "@/pages/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import RoomDetailsPage from "@/pages/RoomDetailsPage";
 import { FullMenuPage } from "@/pages/FullMenuPage";
 import { AboutUsGaleryPage } from "@/pages/AboutUsGaleryPage";
+import { LoginPage } from "@/pages/LoginPage";
 
 // Configuración de rutas
 export const router = createBrowserRouter([

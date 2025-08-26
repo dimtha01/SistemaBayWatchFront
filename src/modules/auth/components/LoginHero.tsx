@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowDown, Sparkles, Shield, ChevronDown } from "lucide-react";
+import { ArrowDown, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export const LoginHero = () => {
