@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './useAuth';
 import { register as registerService } from '../services/auth.service';
-import { showToast } from '@/lib/utils';
+// import { showToast } from '@/lib/utils'; // Removed
 
 export const useRegisterForm = () => {
   const [email, setEmail] = useState('');
@@ -30,13 +30,11 @@ export const useRegisterForm = () => {
     const passwordError = validatePassword(password);
     if (passwordError) {
       setError(passwordError);
-      showToast('error', passwordError);
       return;
     }
 
     if (password !== confirmPassword) {
       setError("Las contraseñas no coinciden");
-      showToast('error', "Las contraseñas no coinciden");
       return;
     }
     
@@ -45,12 +43,10 @@ export const useRegisterForm = () => {
     try {
       await registerService({ email, password });
       await login({ email, password });
-      showToast('success', '¡Registro exitoso!');
       navigate('/');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Ocurrió un error inesperado.';
       setError(errorMessage);
-      showToast('error', errorMessage);
     } finally {
       setIsLoading(false);
     }

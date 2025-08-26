@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { useRegisterForm } from "../hook/useRegisterForm";
+import Alert from "@/components/Alert/Alert";
 
 export const RegisterForm = () => {
   const {
@@ -50,9 +51,7 @@ export const RegisterForm = () => {
 
         <CardContent className="pt-4 sm:pt-6 px-4 sm:px-6">
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-            {error && (
-              <p className="text-sm text-red-600 text-center">{error}</p>
-            )}
+            {error && <Alert icon="error" title={error} />}
             {/* Email */}
             <div className="space-y-1 sm:space-y-2">
               <Label

@@ -30,7 +30,6 @@ export const useLoginForm = () => {
       const errorMessage = err instanceof Error ? err.message : 'Ocurrió un error inesperado.';
       setError(errorMessage);
       setAlertInfo({ icon: 'error', title: errorMessage });
-      onLoginResult('error', errorMessage, '');
     }
   };
 

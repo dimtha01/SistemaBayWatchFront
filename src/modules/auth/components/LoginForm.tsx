@@ -8,11 +8,7 @@ import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import { useLoginForm } from "../hook/useLoginForm";
 import Alert from "@/components/Alert/Alert"; // Import the Alert component
 
-interface LoginFormProps {
-  onLoginResult: (icon: 'success' | 'error' | 'warning' | 'info' | 'question', title: string, text: string) => void;
-}
-
-export const LoginForm = ({ onLoginResult }: LoginFormProps) => {
+export const LoginForm = () => {
   const {
     email,
     setEmail,
