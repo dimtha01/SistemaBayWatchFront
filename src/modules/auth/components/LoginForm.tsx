@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import { useLoginForm } from "../hook/useLoginForm";
+import Alert from "@/components/Alert/Alert"; // Import the Alert component
 
 interface LoginFormProps {
   onLoginResult: (icon: 'success' | 'error' | 'warning' | 'info' | 'question', title: string, text: string) => void;
@@ -121,7 +122,7 @@ export const LoginForm = ({ onLoginResult }: LoginFormProps) => {
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 text-center">{error}</p>
+              <Alert icon="error"  title={error} />
             )}
 
             {/* Botón de submit */}
