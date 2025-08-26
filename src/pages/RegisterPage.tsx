@@ -1,6 +1,6 @@
 import { Header } from "../components/Header/Header";
-import { RegisterHero } from "../components/RegisterHero/RegisterHero";
-import { RegisterForm } from "../components/RegisterForm/RegisterForm";
+import { RegisterHero } from "../modules/auth/components/RegisterHero";
+import { RegisterForm } from "../modules/auth/components/RegisterForm";
 
 export const RegisterPage = () => {
   return (
