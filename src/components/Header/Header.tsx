@@ -47,7 +47,6 @@ export const Header = () => {
               }`}
             />
           </Link>
-
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center space-x-4 xl:space-x-6 bg-black/30 backdrop-blur-md rounded-full px-4 xl:px-6 py-2.5 xl:py-3 border border-white/20 shadow-lg">
             {navigationLinks.map((link) => (
@@ -60,9 +59,8 @@ export const Header = () => {
               </Link>
             ))}
           </nav>
-
           {/* Desktop User Actions */}
-          <div className="hidden sm:flex items-center space-x-3 lg:space-x-4">
+          <div className="hidden lg:flex items-center space-x-3 lg:space-x-4">
             <Link
               to="/signin"
               className={`px-4 lg:px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-full shadow-lg hover:from-red-500 hover:to-red-600 hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-sm lg:text-base ${
@@ -70,39 +68,30 @@ export const Header = () => {
               }`}
             >
               <span className="hidden md:inline">Iniciar Sesión</span>
-              <span className="md:hidden">Entrar</span>
+              <span className="md:hidden ">Entrar</span>
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Botón para abrir el menú */}
           <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-2 text-white hover:text-yellow-200 transition-colors duration-300 z-50 relative"
-            aria-label="Toggle menu"
+            onClick={() => setIsMenuOpen(true)}
+            className={`lg:hidden p-2 text-white hover:text-yellow-200 transition-colors duration-300 z-50 relative ${
+              isMenuOpen ? "hidden" : ""
+            }`}
+            aria-label="Abrir menú"
           >
-            <AnimatePresence mode="wait">
-              {isMenuOpen ? (
-                <motion.div
-                  key="close"
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <X className="w-5 h-5 sm:w-6 sm:h-6" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="menu"
-                  initial={{ rotate: 90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: -90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
+          {/* Botón para cerrar el menú */}
+          <button
+            onClick={() => setIsMenuOpen(false)}
+            className={`lg:hidden p-2 text-white hover:text-yellow-200 transition-colors duration-300 z-50 relative ${
+              !isMenuOpen ? "hidden" : ""
+            }`}
+            aria-label="Cerrar menú"
+          >
+            <X className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
       </header>
@@ -136,7 +125,6 @@ export const Header = () => {
                     Menú
                   </h2>
                 </div>
-
                 {/* Navigation Links */}
                 <nav className="flex-1 px-4 sm:px-6 py-6 sm:py-8">
                   <div className="space-y-1 sm:space-y-2">
