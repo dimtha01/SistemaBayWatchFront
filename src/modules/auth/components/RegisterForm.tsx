@@ -1,47 +1,26 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { useRegisterForm } from "../hook/useRegisterForm";
 
 export const RegisterForm = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleChange = (e: { target: { name: any; value: any; }; }) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: { preventDefault: () => void; }) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    if (formData.password !== formData.confirmPassword) {
-      alert("Las contraseñas no coinciden");
-      setIsLoading(false);
-      return;
-    }
-
-    // Simulación de envío
-    setTimeout(() => {
-      console.log("Registro enviado:", formData);
-      setIsLoading(false);
-    }, 1500);
-  };
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    confirmPassword,
+    setConfirmPassword,
+    showPassword,
+    setShowPassword,
+    showConfirmPassword,
+    setShowConfirmPassword,
+    error,
+    isLoading,
+    handleSubmit,
+  } = useRegisterForm();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-100 flex items-center justify-center p-3 sm:p-4 md:p-6 relative">
@@ -52,7 +31,7 @@ export const RegisterForm = () => {
       </div>
 
       {/* Formulario */}
-      <Card className="w-full max-w-sm sm:max-w-md lg:max-w-lg relative z-10 bg-white/90 backdrop-blur-sm border border-orange-200 shadow-2xl shadow-orange-100/70">
+      <Card className=" w-full max-w-sm sm:max-w-md lg:max-w-lg relative z-10 bg-white/90 backdrop-blur-sm border border-orange-200 shadow-2xl shadow-orange-100/70 py-7">
         <CardHeader className="text-center pb-2 px-4 sm:px-6">
           {/* Ícono */}
           <div className="mx-auto w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-r from-[#F20C0C] via-[#D10000] to-[#A00000] rounded-2xl flex items-center justify-center mb-3 sm:mb-4 shadow-lg">
@@ -71,30 +50,9 @@ export const RegisterForm = () => {
 
         <CardContent className="pt-4 sm:pt-6 px-4 sm:px-6">
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-            {/* Nombre */}
-            <div className="space-y-1 sm:space-y-2">
-              <Label
-                htmlFor="name"
-                className="text-xs sm:text-sm font-medium"
-                style={{ color: "#0D0D0D" }}
-              >
-                Nombre Completo
-              </Label>
-              <div className="relative">
-                <User className="absolute left-3 top-2.5 sm:top-3 h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
-                <Input
-                  id="name"
-                  name="name"
-                  type="text"
-                  placeholder="Tu nombre"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="pl-9 sm:pl-10 h-10 sm:h-12 text-sm sm:text-base border-gray-300 focus:border-orange-500 focus:ring-orange-500 text-[#0D0D0D] placeholder:text-gray-400 transition-colors"
-                  required
-                />
-              </div>
-            </div>
-
+            {error && (
+              <p className="text-sm text-red-600 text-center">{error}</p>
+            )}
             {/* Email */}
             <div className="space-y-1 sm:space-y-2">
               <Label
@@ -111,32 +69,8 @@ export const RegisterForm = () => {
                   name="email"
                   type="email"
                   placeholder="tu@ejemplo.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="pl-9 sm:pl-10 h-10 sm:h-12 text-sm sm:text-base border-gray-300 focus:border-orange-500 focus:ring-orange-500 text-[#0D0D0D] placeholder:text-gray-400 transition-colors"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Teléfono */}
-            <div className="space-y-1 sm:space-y-2">
-              <Label
-                htmlFor="phone"
-                className="text-xs sm:text-sm font-medium"
-                style={{ color: "#0D0D0D" }}
-              >
-                Teléfono
-              </Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-2.5 sm:top-3 h-4 w-4 sm:h-5 sm:w-5 text-gray-500" />
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  placeholder="+52 123 456 7890"
-                  value={formData.phone}
-                  onChange={handleChange}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="pl-9 sm:pl-10 h-10 sm:h-12 text-sm sm:text-base border-gray-300 focus:border-orange-500 focus:ring-orange-500 text-[#0D0D0D] placeholder:text-gray-400 transition-colors"
                   required
                 />
@@ -159,18 +93,21 @@ export const RegisterForm = () => {
                   name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  value={formData.password}
-                  onChange={handleChange}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="pl-9 sm:pl-10 pr-10 sm:pr-12 h-10 sm:h-12 text-sm sm:text-base border-gray-300 focus:border-orange-500 focus:ring-orange-500 text-[#0D0D0D] placeholder:text-gray-400 transition-colors"
                   required
-                  minLength={8}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-2.5 sm:top-3 text-gray-500 hover:text-gray-700 transition-colors"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Eye className="h-4 w-4 sm:h-5 sm:w-5" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                  )}
                 </button>
               </div>
               <p className="text-xs text-gray-500">Mínimo 8 caracteres</p>
@@ -192,8 +129,8 @@ export const RegisterForm = () => {
                   name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pl-9 sm:pl-10 pr-10 sm:pr-12 h-10 sm:h-12 text-sm sm:text-base border-gray-300 focus:border-orange-500 focus:ring-orange-500 text-[#0D0D0D] placeholder:text-gray-400 transition-colors"
                   required
                 />
@@ -202,7 +139,11 @@ export const RegisterForm = () => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-2.5 sm:top-3 text-gray-500 hover:text-gray-700 transition-colors"
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" /> : <Eye className="h-4 w-4 sm:h-5 sm:w-5" />}
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
+                  ) : (
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
+                  )}
                 </button>
               </div>
             </div>
@@ -216,13 +157,22 @@ export const RegisterForm = () => {
                 style={{ accentColor: "#F20C0C" }}
                 required
               />
-              <Label htmlFor="terms" className="text-gray-600 text-xs sm:text-sm leading-tight">
+              <Label
+                htmlFor="terms"
+                className="text-gray-600 text-xs sm:text-sm leading-tight"
+              >
                 Acepto los{" "}
-                <a href="#" className="text-[#F20C0C] hover:underline font-medium">
+                <a
+                  href="#"
+                  className="text-[#F20C0C] hover:underline font-medium"
+                >
                   Términos de Servicio
                 </a>{" "}
                 y la{" "}
-                <a href="#" className="text-[#F20C0C] hover:underline font-medium">
+                <a
+                  href="#"
+                  className="text-[#F20C0C] hover:underline font-medium"
+                >
                   Política de Privacidad
                 </a>
               </Label>

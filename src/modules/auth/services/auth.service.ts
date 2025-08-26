@@ -1,5 +1,5 @@
 import { API_URL } from "../utils/constants";
-import type { LoginCredentials, LoginResponse } from "../types/auth.types";
+import type { LoginCredentials, LoginResponse, RegisterCredentials, RegisterResponse } from "../types/auth.types";
 
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -13,6 +13,23 @@ export const login = async (credentials: LoginCredentials): Promise<LoginRespons
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Error al iniciar sesión");
+  }
+
+  return response.json();
+};
+
+export const register = async (credentials: RegisterCredentials): Promise<RegisterResponse> => {
+  const response = await fetch(`${API_URL}/api/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(credentials),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Error al registrarse");
   }
 
   return response.json();
