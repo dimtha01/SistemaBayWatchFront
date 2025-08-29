@@ -1,4 +1,4 @@
-import { API_URL } from "../utils/constants";
+import { API_URL } from "../../../utils/constants";
 import type { LoginCredentials, LoginResponse, RegisterCredentials, RegisterResponse } from "../types/auth.types";
 
 export const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
