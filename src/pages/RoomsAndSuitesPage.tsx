@@ -1,11 +1,8 @@
-import { RoomsHero } from "@/components/RoomsHero.tsx/RoomsHero";
-import { Header } from "../components/Header/Header";
-import { RoomsGridSection } from "@/modules/rooms";
+import { RoomsGridSection, RoomsHero } from "@/modules/rooms";
 
 export const RoomsAndSuitesPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <RoomsHero /> {/* Añadir el nuevo hero */}
       <main className="relative z-10">
         {" "}

@@ -4,3 +4,4 @@ export * from "./EmptyState/EmptyState";
 export * from "./ResultsInfo/ResultsInfo";
 export * from "./Pagination/Pagination";
 export * from "./RoomsGridSection/RoomsGridSection";
+export * from "./RoomsHero/RoomsHero";
