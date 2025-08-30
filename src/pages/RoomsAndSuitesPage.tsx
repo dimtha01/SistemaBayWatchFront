@@ -1,6 +1,6 @@
-import { RoomsHero } from "@/components/RoomsHero.tsx/RoomsHero"
-import { Header } from "../components/Header/Header"
-import { RoomsGridSection } from "../components/RoomsGridSection/RoomsGridSection"
+import { RoomsHero } from "@/components/RoomsHero.tsx/RoomsHero";
+import { Header } from "../components/Header/Header";
+import { RoomsGridSection } from "@/modules/rooms";
 
 export const RoomsAndSuitesPage = () => {
   return (
@@ -13,5 +13,5 @@ export const RoomsAndSuitesPage = () => {
         <RoomsGridSection />
       </main>
     </div>
-  )
-}
+  );
+};

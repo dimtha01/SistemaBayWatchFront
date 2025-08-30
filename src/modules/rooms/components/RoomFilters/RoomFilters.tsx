@@ -1,13 +1,9 @@
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+"use client"
+
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Search,
   RotateCcw,
@@ -21,38 +17,29 @@ import {
   Building,
   Leaf,
   Mountain,
-} from "lucide-react";
-import { useState, useEffect } from "react";
-
-interface RoomFiltersProps {
-  onFilterChange: (filters: {
-    capacity?: number;
-    bedType?: string;
-    view?: string;
-    priceRange?: { min: number; max: number };
-    amenities?: string[];
-  }) => void;
-}
+} from "lucide-react"
+import { useState, useEffect } from "react"
+import type { RoomFiltersProps, ViewOption, AmenityOption } from "../../types/room.types"
 
 export const RoomFilters = ({ onFilterChange }: RoomFiltersProps) => {
-  const [capacity, setCapacity] = useState<number | undefined>(undefined);
-  const [bedType, setBedType] = useState<string | undefined>(undefined);
-  const [view, setView] = useState<string | undefined>(undefined);
-  const [minPrice, setMinPrice] = useState<number | undefined>(undefined);
-  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined);
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [capacity, setCapacity] = useState<number | undefined>(undefined)
+  const [bedType, setBedType] = useState<string | undefined>(undefined)
+  const [view, setView] = useState<string | undefined>(undefined)
+  const [minPrice, setMinPrice] = useState<number | undefined>(undefined)
+  const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined)
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
+  const [isExpanded, setIsExpanded] = useState(false)
 
-  const amenitiesList = [
+  const amenitiesList: AmenityOption[] = [
     { id: "Wi-Fi", label: "Wi-Fi", icon: "📶" },
     { id: "TV", label: "TV", icon: "📺" },
     { id: "AC", label: "Aire Acondicionado", icon: "❄️" },
     { id: "Minibar", label: "Minibar", icon: "🍾" },
     { id: "Balcony", label: "Balcón", icon: "🏞️" },
     { id: "Jacuzzi", label: "Jacuzzi", icon: "🛁" },
-  ];
+  ]
 
-  const viewOptions = [
+  const viewOptions: ViewOption[] = [
     {
       value: "Ocean",
       label: "Océano",
@@ -73,17 +60,17 @@ export const RoomFilters = ({ onFilterChange }: RoomFiltersProps) => {
       label: "Montaña",
       icon: <Mountain className="w-4 h-4 text-[#020659]" />,
     },
-  ];
+  ]
 
   const getActiveFiltersCount = () => {
-    let count = 0;
-    if (capacity) count++;
-    if (bedType) count++;
-    if (view) count++;
-    if (minPrice || maxPrice) count++;
-    if (selectedAmenities.length > 0) count++;
-    return count;
-  };
+    let count = 0
+    if (capacity) count++
+    if (bedType) count++
+    if (view) count++
+    if (minPrice || maxPrice) count++
+    if (selectedAmenities.length > 0) count++
+    return count
+  }
 
   const handleApplyFilters = () => {
     const priceRange =
@@ -92,7 +79,7 @@ export const RoomFilters = ({ onFilterChange }: RoomFiltersProps) => {
             min: minPrice || 0,
             max: maxPrice || 9999,
           }
-        : undefined;
+        : undefined
 
     onFilterChange({
       capacity,
@@ -100,56 +87,54 @@ export const RoomFilters = ({ onFilterChange }: RoomFiltersProps) => {
       view,
       priceRange,
       amenities: selectedAmenities.length > 0 ? selectedAmenities : undefined,
-    });
-  };
+    })
+  }
 
   const handleResetFilters = () => {
-    setCapacity(undefined);
-    setBedType(undefined);
-    setView(undefined);
-    setMinPrice(undefined);
-    setMaxPrice(undefined);
-    setSelectedAmenities([]);
-    onFilterChange({});
-  };
+    setCapacity(undefined)
+    setBedType(undefined)
+    setView(undefined)
+    setMinPrice(undefined)
+    setMaxPrice(undefined)
+    setSelectedAmenities([])
+    onFilterChange({})
+  }
 
   const toggleAmenity = (amenityId: string) => {
     setSelectedAmenities((prev) =>
-      prev.includes(amenityId)
-        ? prev.filter((id) => id !== amenityId)
-        : [...prev, amenityId]
-    );
-  };
+      prev.includes(amenityId) ? prev.filter((id) => id !== amenityId) : [...prev, amenityId],
+    )
+  }
 
   const removeFilter = (filterType: string, value?: string) => {
     switch (filterType) {
       case "capacity":
-        setCapacity(undefined);
-        break;
+        setCapacity(undefined)
+        break
       case "bedType":
-        setBedType(undefined);
-        break;
+        setBedType(undefined)
+        break
       case "view":
-        setView(undefined);
-        break;
+        setView(undefined)
+        break
       case "price":
-        setMinPrice(undefined);
-        setMaxPrice(undefined);
-        break;
+        setMinPrice(undefined)
+        setMaxPrice(undefined)
+        break
       case "amenity":
         if (value) {
-          setSelectedAmenities((prev) => prev.filter((id) => id !== value));
+          setSelectedAmenities((prev) => prev.filter((id) => id !== value))
         }
-        break;
+        break
     }
-  };
+  }
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      handleApplyFilters();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [capacity, bedType, view, minPrice, maxPrice, selectedAmenities]);
+      handleApplyFilters()
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [capacity, bedType, view, minPrice, maxPrice, selectedAmenities])
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-[#020659]/10 mb-8 overflow-hidden">
@@ -161,20 +146,13 @@ export const RoomFilters = ({ onFilterChange }: RoomFiltersProps) => {
               <Filter className="w-5 h-5 text-[#F20C1F]" />
             </div>
             <div>
-              <h3 className="font-semibold text-[#0D0D0D]">
-                Filtros de Búsqueda
-              </h3>
-              <p className="text-sm text-[#020659]">
-                Encuentra tu habitación perfecta
-              </p>
+              <h3 className="font-semibold text-[#0D0D0D]">Filtros de Búsqueda</h3>
+              <p className="text-sm text-[#020659]">Encuentra tu habitación perfecta</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             {getActiveFiltersCount() > 0 && (
-              <Badge
-                variant="secondary"
-                className="bg-[#F20C1F]/10 text-[#F20C1F]"
-              >
+              <Badge variant="secondary" className="bg-[#F20C1F]/10 text-[#F20C1F]">
                 {getActiveFiltersCount()} filtro
                 {getActiveFiltersCount() > 1 ? "s" : ""} activo
                 {getActiveFiltersCount() > 1 ? "s" : ""}
@@ -197,71 +175,42 @@ export const RoomFilters = ({ onFilterChange }: RoomFiltersProps) => {
         <div className="px-6 py-3 bg-[#020659]/5 border-b border-[#020659]/10">
           <div className="flex flex-wrap gap-2">
             {capacity && (
-              <Badge
-                variant="outline"
-                className="flex items-center gap-1 bg-white"
-              >
+              <Badge variant="outline" className="flex items-center gap-1 bg-white">
                 <Users className="w-3 h-3 text-[#F20C0C]" />
                 {capacity} personas
-                <button
-                  onClick={() => removeFilter("capacity")}
-                  className="ml-1 hover:bg-gray-100 rounded-full p-0.5"
-                >
+                <button onClick={() => removeFilter("capacity")} className="ml-1 hover:bg-gray-100 rounded-full p-0.5">
                   <X className="w-3 h-3" />
                 </button>
               </Badge>
             )}
             {bedType && (
-              <Badge
-                variant="outline"
-                className="flex items-center gap-1 bg-white"
-              >
+              <Badge variant="outline" className="flex items-center gap-1 bg-white">
                 <Bed className="w-3 h-3 text-[#F20C0C]" />
                 Cama {bedType}
-                <button
-                  onClick={() => removeFilter("bedType")}
-                  className="ml-1 hover:bg-gray-100 rounded-full p-0.5"
-                >
+                <button onClick={() => removeFilter("bedType")} className="ml-1 hover:bg-gray-100 rounded-full p-0.5">
                   <X className="w-3 h-3" />
                 </button>
               </Badge>
             )}
             {view && (
-              <Badge
-                variant="outline"
-                className="flex items-center gap-1 bg-white"
-              >
+              <Badge variant="outline" className="flex items-center gap-1 bg-white">
                 <Eye className="w-3 h-3 text-[#F20C0C]" />
                 Vista {viewOptions.find((v) => v.value === view)?.label}
-                <button
-                  onClick={() => removeFilter("view")}
-                  className="ml-1 hover:bg-gray-100 rounded-full p-0.5"
-                >
+                <button onClick={() => removeFilter("view")} className="ml-1 hover:bg-gray-100 rounded-full p-0.5">
                   <X className="w-3 h-3" />
                 </button>
               </Badge>
             )}
             {(minPrice || maxPrice) && (
-              <Badge
-                variant="outline"
-                className="flex items-center gap-1 bg-white"
-              >
-                <DollarSign className="w-3 h-3 text-[#F20C0C]" />$
-                {minPrice || 0} - ${maxPrice || "∞"}
-                <button
-                  onClick={() => removeFilter("price")}
-                  className="ml-1 hover:bg-gray-100 rounded-full p-0.5"
-                >
+              <Badge variant="outline" className="flex items-center gap-1 bg-white">
+                <DollarSign className="w-3 h-3 text-[#F20C0C]" />${minPrice || 0} - ${maxPrice || "∞"}
+                <button onClick={() => removeFilter("price")} className="ml-1 hover:bg-gray-100 rounded-full p-0.5">
                   <X className="w-3 h-3" />
                 </button>
               </Badge>
             )}
             {selectedAmenities.map((amenity) => (
-              <Badge
-                key={amenity}
-                variant="outline"
-                className="flex items-center gap-1 bg-white"
-              >
+              <Badge key={amenity} variant="outline" className="flex items-center gap-1 bg-white">
                 <span>{amenitiesList.find((a) => a.id === amenity)?.icon}</span>
                 {amenitiesList.find((a) => a.id === amenity)?.label}
                 <button
@@ -281,10 +230,7 @@ export const RoomFilters = ({ onFilterChange }: RoomFiltersProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           {/* Capacity */}
           <div className="space-y-2">
-            <label
-              htmlFor="capacity"
-              className="flex items-center gap-2 text-sm font-medium text-[#0D0D0D]"
-            >
+            <label htmlFor="capacity" className="flex items-center gap-2 text-sm font-medium text-[#0D0D0D]">
               <Users className="w-4 h-4 text-[#F20C0C]" />
               Capacidad
             </label>
@@ -295,29 +241,19 @@ export const RoomFilters = ({ onFilterChange }: RoomFiltersProps) => {
               max="10"
               placeholder="Ej. 2"
               value={capacity || ""}
-              onChange={(e) =>
-                setCapacity(
-                  e.target.value ? Number.parseInt(e.target.value) : undefined
-                )
-              }
+              onChange={(e) => setCapacity(e.target.value ? Number.parseInt(e.target.value) : undefined)}
               className="w-full focus:ring-[#F20C0C] focus:border-[#F20C0C]"
             />
           </div>
 
           {/* Bed Type */}
           <div className="space-y-2">
-            <label
-              htmlFor="bedType"
-              className="flex items-center gap-2 text-sm font-medium text-[#0D0D0D]"
-            >
+            <label htmlFor="bedType" className="flex items-center gap-2 text-sm font-medium text-[#0D0D0D]">
               <Bed className="w-4 h-4 text-[#F20C0C]" />
               Tipo de Cama
             </label>
             <Select onValueChange={setBedType} value={bedType}>
-              <SelectTrigger
-                id="bedType"
-                className="w-full focus:ring-[#F20C0C] focus:border-[#F20C0C]"
-              >
+              <SelectTrigger id="bedType" className="w-full focus:ring-[#F20C0C] focus:border-[#F20C0C]">
                 <SelectValue placeholder="Seleccionar tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -345,18 +281,12 @@ export const RoomFilters = ({ onFilterChange }: RoomFiltersProps) => {
 
           {/* View */}
           <div className="space-y-2">
-            <label
-              htmlFor="view"
-              className="flex items-center gap-2 text-sm font-medium text-[#0D0D0D]"
-            >
+            <label htmlFor="view" className="flex items-center gap-2 text-sm font-medium text-[#0D0D0D]">
               <Eye className="w-4 h-4 text-[#F20C0C]" />
               Vista
             </label>
             <Select onValueChange={setView} value={view}>
-              <SelectTrigger
-                id="view"
-                className="w-full focus:ring-[#F20C0C] focus:border-[#F20C0C]"
-              >
+              <SelectTrigger id="view" className="w-full focus:ring-[#F20C0C] focus:border-[#F20C0C]">
                 <SelectValue placeholder="Seleccionar vista" />
               </SelectTrigger>
               <SelectContent>
@@ -383,22 +313,14 @@ export const RoomFilters = ({ onFilterChange }: RoomFiltersProps) => {
                 type="number"
                 placeholder="Min"
                 value={minPrice || ""}
-                onChange={(e) =>
-                  setMinPrice(
-                    e.target.value ? Number.parseInt(e.target.value) : undefined
-                  )
-                }
+                onChange={(e) => setMinPrice(e.target.value ? Number.parseInt(e.target.value) : undefined)}
                 className="w-full focus:ring-[#F20C0C] focus:border-[#F20C0C]"
               />
               <Input
                 type="number"
                 placeholder="Max"
                 value={maxPrice || ""}
-                onChange={(e) =>
-                  setMaxPrice(
-                    e.target.value ? Number.parseInt(e.target.value) : undefined
-                  )
-                }
+                onChange={(e) => setMaxPrice(e.target.value ? Number.parseInt(e.target.value) : undefined)}
                 className="w-full focus:ring-[#F20C0C] focus:border-[#F20C0C]"
               />
             </div>
@@ -445,7 +367,7 @@ export const RoomFilters = ({ onFilterChange }: RoomFiltersProps) => {
           <Button
             onClick={handleResetFilters}
             variant="outline"
-            className="flex-1 border-[#020659]/30 text-[#020659] hover:bg-[#020659]/5 transition-colors"
+            className="flex-1 border-[#020659]/30 text-[#020659] hover:bg-[#020659]/5 transition-colors bg-transparent"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             Limpiar Filtros
@@ -453,5 +375,5 @@ export const RoomFilters = ({ onFilterChange }: RoomFiltersProps) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
