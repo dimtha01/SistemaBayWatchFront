@@ -1,5 +1,4 @@
-import type React from "react";
-
+"use client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,73 +11,26 @@ import {
 } from "@/components/ui/dialog";
 import {
   Bed,
-  Wifi,
-  Tv,
-  Mountain,
-  Building,
-  Waves,
-  Leaf,
   Users,
   Star,
   Heart,
   Share2,
   Eye,
-  Coffee,
-  Bath,
-  Utensils,
-  Wind,
-  Snowflake,
   MapPin,
   Clock,
 } from "lucide-react";
-import { useState, useCallback, type JSX } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import type { RoomCardProps } from "../../types/room.types";
+import { useRoomCardState, useRoomBooking, useAmenityIcons } from "../../hook";
+import {
+  VIEW_ICONS,
+  VIEW_LABELS,
+  DEFAULT_BOOKING_CONFIG,
+  DEFAULT_UNAVAILABLE_DATES,
+  DEFAULT_RESERVED_PERIODS,
+} from "../../utils/room-card.constants";
 import BookingWidget from "@/components/RoomDetails/BookingWidget";
-
-interface RoomCardProps {
-  id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  image: string;
-  capacity: number;
-  bedType: "King" | "Queen" | "Twin" | "Double" | "Single";
-  view: "Ocean" | "City" | "Garden" | "Mountain" | "Pool";
-  amenities: string[];
-  rating?: number;
-  reviewCount?: number;
-  isPopular?: boolean;
-  discount?: number;
-  isAvailable?: boolean;
-  onClick?: () => void;
-}
-
-const AMENITY_ICONS: Record<string, JSX.Element> = {
-  wifi: <Wifi className="w-3.5 h-3.5 text-[#020659]" />,
-  tv: <Tv className="w-3.5 h-3.5 text-[#020659]" />,
-  desayuno: <Coffee className="w-3.5 h-3.5 text-[#020659]" />,
-  "baño privado": <Bath className="w-3.5 h-3.5 text-[#020659]" />,
-  restaurante: <Utensils className="w-3.5 h-3.5 text-[#020659]" />,
-  "aire acondicionado": <Snowflake className="w-3.5 h-3.5 text-[#020659]" />,
-  ventilador: <Wind className="w-3.5 h-3.5 text-[#020659]" />,
-};
-
-const VIEW_ICONS: Record<string, JSX.Element> = {
-  Ocean: <Waves className="w-4 h-4 text-[#020659]" />,
-  City: <Building className="w-4 h-4 text-[#020659]" />,
-  Garden: <Leaf className="w-4 h-4 text-[#020659]" />,
-  Mountain: <Mountain className="w-4 h-4 text-[#020659]" />,
-  Pool: <Waves className="w-4 h-4 text-[#020659]" />,
-};
-
-const VIEW_LABELS: Record<string, string> = {
-  Ocean: "al océano",
-  City: "a la ciudad",
-  Garden: "al jardín",
-  Mountain: "a la montaña",
-  Pool: "a la piscina",
-};
 
 export const RoomCard = ({
   id,
@@ -97,85 +49,30 @@ export const RoomCard = ({
   isAvailable = true,
   onClick,
 }: RoomCardProps) => {
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const {
+    isFavorite,
+    imageLoaded,
+    isModalOpen,
+    setIsModalOpen,
+    handleFavoriteClick,
+    handleShareClick,
+    handleReserveClick,
+    handleImageLoad,
+  } = useRoomCardState();
 
-  const handleFavoriteClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsFavorite((prev) => !prev);
-  }, []);
-
-  const handleShareClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    // Implementar lógica de compartir
-  }, []);
-
-  const handleReserveClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsModalOpen(true);
-  }, []);
-
-  const getAmenityIcon = (amenity: string) => {
-    const key = amenity.toLowerCase();
-    return AMENITY_ICONS[key] || null;
-  };
+  const { handleBooking } = useRoomBooking();
+  const { getAmenityIcon } = useAmenityIcons();
 
   const pricePerNight = 650;
 
-  const bookingConfig = {
-    maxGuests: 4,
-    minNights: 1,
-    maxNights: 30,
+  const bookingConfig = DEFAULT_BOOKING_CONFIG;
+  const unavailableDates = DEFAULT_UNAVAILABLE_DATES;
+  const reservedPeriods = DEFAULT_RESERVED_PERIODS;
+
+  const onBookingSubmit = (data: any) => {
+    handleBooking(data, name, setIsModalOpen);
   };
-
-  const unavailableDates = [
-    "2024-12-24",
-    "2024-12-25",
-    "2024-12-31",
-    "2025-01-01",
-    "2025-02-14",
-    "2025-04-18",
-    "2025-04-19",
-    "2025-04-20",
-    "2025-05-01",
-    "2025-07-05",
-    "2025-07-24",
-    "2025-10-12",
-  ];
-
-  const reservedPeriods = [
-    {
-      start: "2024-12-15",
-      end: "2024-12-23",
-      reason: "Reserva confirmada - Temporada navideña",
-    },
-    {
-      start: "2024-12-26",
-      end: "2024-12-30",
-      reason: "Reserva confirmada - Fin de año",
-    },
-    // ... resto de períodos reservados
-  ];
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleBooking = (data: any) => {
-    console.log("Reserva realizada:", data);
-
-    try {
-      console.log("Procesando reserva...", {
-        roomType: name,
-        bookingData: data,
-        timestamp: new Date().toISOString(),
-      });
-
-      // Cerrar modal después de la reserva exitosa
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error("Error al procesar la reserva:", error);
-    }
-  };
+  console.log(amenities);
 
   return (
     <Card
@@ -201,7 +98,7 @@ export const RoomCard = ({
               "w-full h-full object-cover transition-transform duration-500",
               imageLoaded ? "opacity-100" : "opacity-0"
             )}
-            onLoad={() => setImageLoaded(true)}
+            onLoad={handleImageLoad}
             loading="lazy"
           />
         </div>
@@ -311,8 +208,8 @@ export const RoomCard = ({
                 key={index}
                 className="flex items-center gap-1 bg-[#020659]/10 rounded-full px-2 py-1 text-xs text-[#020659]"
               >
-                {getAmenityIcon(amenity)}
-                <span>{amenity}</span>
+                {getAmenityIcon(amenity.icono)}
+                <span>{amenity.nombre}</span>
               </div>
             ))}
             {amenities.length > 3 && (
@@ -355,7 +252,6 @@ export const RoomCard = ({
             </DialogTrigger>
 
             <DialogContent className="sm:max-w-6xl max-h-[95vh] overflow-hidden p-0 gap-0 bg-white">
-              {" "}
               {/* Header del Modal */}
               <div className="relative">
                 {/* Imagen de fondo del header */}
@@ -443,8 +339,8 @@ export const RoomCard = ({
                             key={index}
                             className="flex items-center gap-2 text-sm text-[#020659]"
                           >
-                            {getAmenityIcon(amenity)}
-                            <span>{amenity}</span>
+                            {getAmenityIcon(amenity.icono)}
+                            <span>{amenity.nombre}</span>
                           </div>
                         ))}
                       </div>
@@ -510,7 +406,7 @@ export const RoomCard = ({
                     <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-1">
                       <BookingWidget
                         pricePerNight={pricePerNight}
-                        onBooking={(bookingData) => handleBooking(bookingData)}
+                        onBooking={onBookingSubmit}
                         maxGuests={bookingConfig.maxGuests}
                         minNights={bookingConfig.minNights}
                         maxNights={bookingConfig.maxNights}

@@ -1,31 +1,27 @@
-import { ErrorMessage } from "../ErrorMessage/ErrorMessage"
-import { ResultsInfo } from "../ResultsInfo/ResultsInfo"
-import { Pagination } from "../Pagination/Pagination"
-import { usePagination, useRoomFilters, useRooms } from "../../hook"
-import { RoomsGrid } from "../RoomsGrid/RoomsGrid"
-import { RoomFilters } from "../RoomFilters/RoomFilters"
+"use client";
 
-const ITEMS_PER_PAGE = 6
+import { RoomFilters } from "../RoomFilters/RoomFilters";
+import { ErrorMessage } from "../ErrorMessage/ErrorMessage";
+import { ResultsInfo } from "../ResultsInfo/ResultsInfo";
+import { RoomsGrid } from "../RoomsGrid/RoomsGrid";
+import type { Room } from "../../types/room.types";
+import { useState, useEffect } from "react";
+import { useRooms } from "../../hook";
 
 export const RoomsGridSection = () => {
-  const { allRoomsData, loading, error, retry } = useRooms()
-  const { filteredRooms, filterLoading, applyFilters, clearFilters } = useRoomFilters(allRoomsData)
-  const { config, startIndex, endIndex, goToPage, resetPage } = usePagination({
-    totalItems: filteredRooms.length,
-    itemsPerPage: ITEMS_PER_PAGE,
-  })
+  const { allRoomsData, loading, error, retry } = useRooms();
+  const [filteredRooms, setFilteredRooms] = useState<Room[]>([]);
+  const [filterLoading, setFilterLoading] = useState(false);
+  console.log(allRoomsData);
 
-  const currentRooms = filteredRooms.slice(startIndex, endIndex)
+  useEffect(() => {
+    setFilteredRooms(allRoomsData);
+  }, [allRoomsData]);
 
-  const handleFilterChange = async (filters: { capacity?: number; bedType?: string; view?: string }) => {
-    await applyFilters(filters)
-    resetPage()
-  }
-
-  const handleClearFilters = () => {
-    clearFilters()
-    resetPage()
-  }
+  const handleFiltersApplied = (filtered: Room[], loading: boolean) => {
+    setFilteredRooms(filtered);
+    setFilterLoading(loading);
+  };
 
   return (
     <section className="py-8 sm:py-12 lg:py-16 bg-gray-50">
@@ -35,35 +31,41 @@ export const RoomsGridSection = () => {
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">
             Habitaciones & Suites
           </h2>
-          <p className="text-base sm:text-lg text-gray-600 px-4">Encuentra la estancia perfecta para tu viaje.</p>
+          <p className="text-base sm:text-lg text-gray-600 px-4">
+            Encuentra la estancia perfecta para tu viaje.
+          </p>
         </div>
 
         {/* Error Message */}
         {error && <ErrorMessage error={error} onRetry={retry} />}
 
         {/* Filtros */}
-        {!loading && !error && <RoomFilters onFilterChange={handleFilterChange} />}
+        {!loading && !error && (
+          <RoomFilters
+            rooms={allRoomsData}
+            onFiltersApplied={handleFiltersApplied}
+          />
+        )}
 
         {/* Información de resultados */}
         {!loading && !filterLoading && !error && filteredRooms.length > 0 && (
-          <ResultsInfo startIndex={startIndex} endIndex={endIndex} totalItems={filteredRooms.length} />
+          <ResultsInfo
+            startIndex={1}
+            endIndex={filteredRooms.length}
+            totalItems={filteredRooms.length}
+          />
         )}
 
         {/* Grid de habitaciones */}
         <RoomsGrid
-          rooms={currentRooms}
+          rooms={filteredRooms}
           loading={loading || filterLoading}
           error={error}
-          itemsPerPage={ITEMS_PER_PAGE}
+          itemsPerPage={filteredRooms.length}
           onRetry={retry}
-          onClearFilters={handleClearFilters}
+          onClearFilters={() => setFilteredRooms(allRoomsData)}
         />
-
-        {/* Paginación */}
-        {!loading && !filterLoading && !error && filteredRooms.length > ITEMS_PER_PAGE && (
-          <Pagination config={config} onPageChange={goToPage} />
-        )}
       </div>
     </section>
-  )
-}
+  );
+};

@@ -1,7 +1,6 @@
-// src/components/DynamicIcon.tsx
-import React from "react";
+import type React from "react";
 import type { LucideProps } from "lucide-react";
-import { iconMap, type IconName } from "@/modules/rooms";
+import { iconMap, type IconName } from "../../utils";
 
 interface DynamicIconProps extends LucideProps {
   name: IconName;
