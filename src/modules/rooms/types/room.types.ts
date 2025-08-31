@@ -170,29 +170,31 @@ export interface Amenity {
 }
 // Definición de la interfaz para la reseña
 export interface Review {
-  id: number;
-  name: string;
-  avatar: string;
-  rating: number;
-  comment: string;
-  date: string;
+  id: number;          // Identificador único de la reseña
+  name: string;       // Nombre del autor de la reseña
+  avatar?: string;    // URL de la imagen del avatar del autor (opcional)
+  rating: number;     // Calificación dada por el autor (1 a 5)
+  comment: string;    // Comentario de la reseña
+  date: string;       // Fecha en que se publicó la reseña (en formato ISO)
 }
+
+
 export interface EmptyStateProps {
-  type: "error" | "no-results"
-  onAction: () => void
-  actionLabel: string
+  type: "error" | "no-results";
+  onAction: () => void;
+  actionLabel: string;
 }
 
 export interface ErrorMessageProps {
-  error: string
-  onRetry: () => void
+  error: string;
+  onRetry: () => void;
 }
 export interface ResultsInfoProps {
-  startIndex: number
-  endIndex: number
-  totalItems: number
+  startIndex: number;
+  endIndex: number;
+  totalItems: number;
 }
 export interface ReviewModalProps {
-  onClose: () => void
-  onSubmit: (review: Review) => void
+  onClose: () => void;
+  onSubmit: (review: Review) => void;
 }

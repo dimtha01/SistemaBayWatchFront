@@ -8,6 +8,7 @@ import {
   RoomDescription,
   RoomAmenities,
   RoomReviews,
+  type Review,
 } from "@/modules/rooms";
 import { BookingWidget, type BookingData } from "@/modules/booking";
 import { useRoomDetails } from "@/modules/rooms/hook/useRoomDetails";
@@ -55,25 +56,21 @@ const RoomDetailsPage = () => {
     }
   };
 
-  interface Review {
-    name: string;
-    avatar: string;
-    rating: number;
-    comment: string;
-  }
 
-  const handleAddReview = (newReview: Review) => {
-    const review = {
-      id: reviews.length + 1,
-      ...newReview,
-      date: new Date().toLocaleDateString("es-ES", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }),
-    };
-    setReviews([review, ...reviews]);
+
+  const handleAddReview = (newReview: Omit<Review, 'id' | 'date'>) => {
+  const review = {
+    id: reviews.length + 1, // Generar un ID único
+    ...newReview,
+    date: new Date().toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }),
   };
+  setReviews([review, ...reviews]);
+};
+
 
   useEffect(() => {
     window.scrollTo({
