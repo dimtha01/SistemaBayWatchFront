@@ -5,7 +5,7 @@ import { RoomGallery } from "@/components/RoomDetails/RoomGallery";
 import { RoomDescription } from "@/components/RoomDetails/RoomDescription";
 import { RoomAmenities } from "@/components/RoomDetails/RoomAmenities";
 import { RoomReviews } from "@/components/RoomDetails/RoomReviews";
-import { BookingWidget } from "@/modules/booking";
+import { BookingWidget, type BookingData } from "@/modules/booking";
 const RoomDetailsPage = () => {
   const [reviews, setReviews] = useState([
     {
@@ -161,11 +161,7 @@ const RoomDetailsPage = () => {
   // ===== FUNCIONES DE MANEJO =====
 
   // Define a type for the booking data
-  interface BookingData {
-    checkInDate: string;
-    checkOutDate: string;
-    guests: number;
-  }
+
 
   // Función principal para manejar la reserva
   const handleBooking = (data: BookingData) => {
