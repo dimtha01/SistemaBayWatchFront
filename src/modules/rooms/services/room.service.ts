@@ -100,9 +100,8 @@ export function transformApiDataToRoom(apiRoom: ApiRoom): Room {
   ];
 
   const bedType =
-    apiRoom.tipo_habitacion.cama_principal?.nombre_tipo_cama ||
-    "Cama Individual";
-  const view = apiRoom.vista || "Vista al Mar";
+    apiRoom.tipo_habitacion.cama_principal?.nombre_tipo_cama;
+  const view = apiRoom.vista;
 
   return {
     id: `${apiRoom.habitacion_id}`,

@@ -193,7 +193,7 @@ export const RoomCard = ({
           </div>
           <div className="flex items-center gap-1.5">
             <Bed className="w-3.5 h-3.5 text-[#F20C0C]" />
-            <span>Cama {bedType}</span>
+            <span>{bedType}</span>
           </div>
           <div className="flex items-center gap-1.5 col-span-2">
             {VIEW_ICONS[view]}
@@ -319,7 +319,7 @@ export const RoomCard = ({
                       </div>
                       <div className="flex items-center gap-2">
                         <Bed className="w-4 h-4 text-[#F20C0C]" />
-                        <span>Cama: {bedType}</span>
+                        <span>{bedType}</span>
                       </div>
                       <div className="flex items-center gap-2 col-span-2">
                         {VIEW_ICONS[view]}

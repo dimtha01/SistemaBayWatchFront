@@ -31,16 +31,18 @@ import {
 import { useState } from "react";
 import { DynamicIcon } from "../DynamicIcon/DynamicIcon";
 import { useAmenityIcons, useRoomFilters } from "../../hook";
-
+import { ResultsInfo } from "../ResultsInfo/ResultsInfo";
+import { RoomsGrid } from "../RoomsGrid/RoomsGrid";
 export const RoomFilters = () => {
   const { getAmenityIcon } = useAmenityIcons();
   const [isAmenitiesModalOpen, setIsAmenitiesModalOpen] = useState(false);
 
   const {
-    loading,
+    filteredRooms,
     capacity,
     bedType,
     view,
+    filterLoading,
     minPrice,
     maxPrice,
     selectedAmenities,
@@ -61,10 +63,16 @@ export const RoomFilters = () => {
     applyFilters,
     clearFilters,
     getActiveFiltersCount,
-  } = useRoomFilters();
+  } = useRoomFilters(); // Removed rooms parameter
 
   const handleApplyFilters = () => {
     applyFilters();
+
+    setTimeout(() => {
+      console.log(
+        filteredRooms?.length || 0
+      );
+    }, 100);
   };
 
   const handleResetFilters = () => {
@@ -72,8 +80,11 @@ export const RoomFilters = () => {
   };
 
   const previewAmenities = amenitiesList.slice(0, 4);
+  const hasError = !filterLoading && filteredRooms.length === 0
+  const loading = filterLoading
 
   return (
+    <>
     <div className="bg-white rounded-xl shadow-lg border border-[#020659]/10 mb-8 overflow-hidden">
       {/* Header with Filter Toggle */}
       <div className="bg-gradient-to-r from-[#F20C0C]/10 to-[#F20C1F]/10 px-6 py-4 border-b border-[#F20C0C]/20">
@@ -404,21 +415,13 @@ export const RoomFilters = () => {
         <div className="flex gap-3 mt-6 pt-4 border-t border-[#020659]/10">
           <Button
             onClick={handleApplyFilters}
-            disabled={loading}
             className="flex-1 bg-gradient-to-r from-[#F20C0C] to-[#F20C1F] hover:from-[#D10000] hover:to-[#B20000] text-white shadow-md hover:shadow-lg transition-all duration-300"
           >
-            {loading ? (
-              "Cargando..."
-            ) : (
-              <>
-                <Search className="w-4 h-4 mr-2" />
-                Buscar Habitaciones
-              </>
-            )}
+            <Search className="w-4 h-4 mr-2" />
+            Buscar Habitaciones
           </Button>
           <Button
             onClick={handleResetFilters}
-            disabled={loading}
             variant="outline"
             className="flex-1 border-[#020659]/30 text-[#020659] hover:bg-[#020659]/5 transition-colors bg-transparent"
           >
@@ -428,5 +431,20 @@ export const RoomFilters = () => {
         </div>
       </div>
     </div>
+      {/* Información de resultados */}
+        {!loading && !hasError && filteredRooms.length > 0 && (
+          <ResultsInfo startIndex={1} endIndex={filteredRooms.length} totalItems={filteredRooms.length} />
+        )}
+
+        {/* Grid de habitaciones */}
+        <RoomsGrid
+          rooms={filteredRooms}
+          loading={loading}
+          error={hasError ? "No se encontraron habitaciones" : null}
+          itemsPerPage={filteredRooms.length}
+          onRetry={() => window.location.reload()}
+          onClearFilters={clearFilters}
+        />
+    </>
   );
 };

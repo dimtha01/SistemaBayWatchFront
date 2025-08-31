@@ -23,7 +23,7 @@ export const RoomsGrid = ({ rooms, loading, error, itemsPerPage, onRetry, onClea
     });
     
     if (rooms.length > 0) {
-      console.log("Primera habitación:", rooms[0]);
+      console.log("Primera habitación:", rooms);
     }
   }, [rooms, loading, error]);
 

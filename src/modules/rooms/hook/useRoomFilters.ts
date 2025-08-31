@@ -26,11 +26,14 @@ export const useRoomFilters = () => {
   const [viewsLoading, setViewsLoading] = useState(true)
 
   const loadRoomsWithFilters = useCallback(async (filters?: Partial<RoomFilters>) => {
+    console.log("[v0] loadRoomsWithFilters called with filters:", filters)
     setFilterLoading(true)
     try {
       const roomsData = await fetchRooms(filters)
+      console.log("[v0] fetchRooms returned:", roomsData.length, "rooms")
       setRooms(roomsData)
       setFilteredRooms(roomsData)
+      console.log("[v0] filteredRooms updated with:", roomsData.length, "rooms")
     } catch (error) {
       console.error("Failed to load rooms:", error)
       setRooms([])
@@ -42,6 +45,7 @@ export const useRoomFilters = () => {
 
   // Load initial data only once on mount
   useEffect(() => {
+    console.log("[v0] Initial load of rooms")
     loadRoomsWithFilters()
   }, []) // Empty dependency array to run only once
 
@@ -182,35 +186,7 @@ export const useRoomFilters = () => {
     loadRoomsWithFilters()
   }
 
-  useEffect(() => {
-    const currentFilters: Partial<RoomFilters> = {}
-
-    if (capacity) currentFilters.capacity = capacity
-    if (bedType) currentFilters.bedType = bedType
-    if (view) currentFilters.view = view
-    if (minPrice || maxPrice) {
-      currentFilters.priceRange = { min: minPrice || 0, max: maxPrice || 9999 }
-    }
-    if (selectedAmenities.length > 0) currentFilters.amenities = selectedAmenities
-
-
-    const applyFiltersAsync = async () => {
-      setFilterLoading(true)
-      try {
-        const roomsData = await fetchRooms(currentFilters)
-        setRooms(roomsData)
-        setFilteredRooms(roomsData)
-      } catch (error) {
-        console.error("Failed to apply filters:", error)
-        setRooms([])
-        setFilteredRooms([])
-      } finally {
-        setFilterLoading(false)
-      }
-    }
-
-    applyFiltersAsync()
-  }, [capacity, bedType, view, minPrice, maxPrice, selectedAmenities])
+  // Now filters only apply when applyFilters() is called manually from the button
 
   return {
     rooms,
