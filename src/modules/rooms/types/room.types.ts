@@ -58,7 +58,7 @@ export interface ApiResponse {
   data: ApiRoom[];
 }
 
-export interface RoomFilters {
+export interface RoomFiltersType {
   capacity?: number;
   bedType?: string;
   view?: string;
@@ -67,7 +67,7 @@ export interface RoomFilters {
 }
 
 export interface RoomFiltersProps {
-  onFilterChange: (filters: RoomFilters) => void;
+  onFilterChange: (filters: RoomFiltersType) => void;
 }
 
 export interface ViewOption {
@@ -168,3 +168,14 @@ export interface Amenity {
   icono: string; // Aquí defines el tipo de icono
   nombre: string; // Aquí defines el nombre de la amenidad
 }
+// Definición de la interfaz para la reseña
+export interface Review {
+  id: number;
+  name: string;
+  avatar: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
+
+

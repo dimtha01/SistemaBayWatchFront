@@ -1,0 +1,1 @@
+export { RoomAmenities } from "./RoomAmenities";

@@ -2,13 +2,13 @@ import type {
   ApiResponse,
   ApiRoom,
   Room,
-  RoomFilters,
+  RoomFiltersType,
 } from "../types/room.types";
 
 const API_BASE_URL = "http://localhost:3000/api";
 
 export async function fetchRooms(
-  filters?: Partial<RoomFilters>
+  filters?: Partial<RoomFiltersType>
 ): Promise<Room[]> {
   try {
     const queryParams = new URLSearchParams();
@@ -97,8 +97,7 @@ export function transformApiDataToRoom(apiRoom: ApiRoom): Room {
     }) || []),
   ];
 
-  const bedType =
-    apiRoom.tipo_habitacion.cama_principal?.nombre_tipo_cama;
+  const bedType = apiRoom.tipo_habitacion.cama_principal?.nombre_tipo_cama;
   const view = apiRoom.vista;
 
   return {
@@ -112,4 +111,3 @@ export function transformApiDataToRoom(apiRoom: ApiRoom): Room {
     amenities,
   };
 }
-
