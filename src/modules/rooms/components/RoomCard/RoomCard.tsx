@@ -31,6 +31,7 @@ import {
   DEFAULT_RESERVED_PERIODS,
 } from "../../utils/room-card.constants";
 import BookingWidget from "@/components/RoomDetails/BookingWidget";
+import { IconName } from "../../utils/iconMap";
 
 export const RoomCard = ({
   id,

@@ -1,10 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import type { Room, RoomFilters, ViewOption, AmenityOption } from "../types/room.types"
+import { fetchAmenities } from "../services/amenities.service"
+import { fetchBedTypes } from "../services/bedTypes.service"
+import { fetchRoomViews } from "../services/roomViews.service"
+import { fetchRooms } from "../services/room.service"
 
-export const useRoomFilters = (allRooms: Room[]) => {
-  const [filteredRooms, setFilteredRooms] = useState<Room[]>(allRooms)
+export const useRoomFilters = () => {
+  const [rooms, setRooms] = useState<Room[]>([])
+  const [filteredRooms, setFilteredRooms] = useState<Room[]>([])
   const [filterLoading, setFilterLoading] = useState(false)
   const [capacity, setCapacity] = useState<number | undefined>(undefined)
   const [bedType, setBedType] = useState<string | undefined>(undefined)
@@ -13,38 +18,101 @@ export const useRoomFilters = (allRooms: Room[]) => {
   const [maxPrice, setMaxPrice] = useState<number | undefined>(undefined)
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([])
   const [isExpanded, setIsExpanded] = useState(false)
+  const [amenitiesList, setAmenitiesList] = useState<AmenityOption[]>([])
+  const [amenitiesLoading, setAmenitiesLoading] = useState(true)
+  const [bedTypesList, setBedTypesList] = useState<{ id: string; label: string }[]>([])
+  const [bedTypesLoading, setBedTypesLoading] = useState(true)
+  const [viewOptions, setViewOptions] = useState<ViewOption[]>([])
+  const [viewsLoading, setViewsLoading] = useState(true)
 
-  const amenitiesList: AmenityOption[] = [
-    { id: "Wi-Fi", label: "Wi-Fi", icon: "Wifi" },
-    { id: "TV", label: "TV", icon: "Tv" },
-    { id: "AC", label: "Aire Acondicionado", icon: "Snowflake" },
-    { id: "Minibar", label: "Minibar", icon: "Wine" },
-    { id: "Balcony", label: "Balcón", icon: "Mountain" },
-    { id: "Jacuzzi", label: "Jacuzzi", icon: "Bath" },
-  ]
+  const loadRoomsWithFilters = useCallback(async (filters?: Partial<RoomFilters>) => {
+    setFilterLoading(true)
+    try {
+      const roomsData = await fetchRooms(filters)
+      setRooms(roomsData)
+      setFilteredRooms(roomsData)
+    } catch (error) {
+      console.error("Failed to load rooms:", error)
+      setRooms([])
+      setFilteredRooms([])
+    } finally {
+      setFilterLoading(false)
+    }
+  }, [])
 
-  const viewOptions: ViewOption[] = [
-    {
-      value: "Ocean",
-      label: "Océano",
-      icon: "🌊",
-    },
-    {
-      value: "City",
-      label: "Ciudad",
-      icon: "🏢",
-    },
-    {
-      value: "Garden",
-      label: "Jardín",
-      icon: "🌿",
-    },
-    {
-      value: "Mountain",
-      label: "Montaña",
-      icon: "⛰️",
-    },
-  ]
+  // Load initial data only once on mount
+  useEffect(() => {
+    loadRoomsWithFilters()
+  }, []) // Empty dependency array to run only once
+
+  useEffect(() => {
+    const loadAmenities = async () => {
+      setAmenitiesLoading(true)
+      try {
+        const amenities = await fetchAmenities()
+        setAmenitiesList(amenities)
+      } catch (error) {
+        console.error("Failed to load amenities:", error)
+      } finally {
+        setAmenitiesLoading(false)
+      }
+    }
+
+    loadAmenities()
+  }, [])
+
+  useEffect(() => {
+    const loadBedTypes = async () => {
+      setBedTypesLoading(true)
+      try {
+        const bedTypes = await fetchBedTypes()
+        setBedTypesList(bedTypes)
+      } catch (error) {
+        console.error("Failed to load bed types:", error)
+      } finally {
+        setBedTypesLoading(false)
+      }
+    }
+
+    loadBedTypes()
+  }, [])
+
+  useEffect(() => {
+    const loadRoomViews = async () => {
+      setViewsLoading(true)
+      try {
+        const views = await fetchRoomViews()
+        const viewsWithIcons = views.map((view: any) => ({
+          value: view.value,
+          label: view.label,
+          icon: getViewIcon(view.label),
+        }))
+        setViewOptions(viewsWithIcons)
+      } catch (error) {
+        console.error("Failed to load room views:", error)
+        setViewOptions([
+          { value: "Ocean", label: "Océano", icon: "🌊" },
+          { value: "City", label: "Ciudad", icon: "🏢" },
+          { value: "Garden", label: "Jardín", icon: "🌿" },
+          { value: "Mountain", label: "Montaña", icon: "⛰️" },
+        ])
+      } finally {
+        setViewsLoading(false)
+      }
+    }
+
+    loadRoomViews()
+  }, [])
+
+  const getViewIcon = (viewName: string) => {
+    const lowerName = viewName.toLowerCase()
+    if (lowerName.includes("mar") || lowerName.includes("océano") || lowerName.includes("ocean")) return "🌊"
+    if (lowerName.includes("ciudad") || lowerName.includes("city")) return "🏢"
+    if (lowerName.includes("jardín") || lowerName.includes("garden")) return "🌿"
+    if (lowerName.includes("montaña") || lowerName.includes("mountain")) return "⛰️"
+    if (lowerName.includes("piscina") || lowerName.includes("pool")) return "🏊"
+    return "🏨"
+  }
 
   const getActiveFiltersCount = () => {
     let count = 0
@@ -86,14 +154,6 @@ export const useRoomFilters = (allRooms: Room[]) => {
   }
 
   const applyFilters = async (filters?: RoomFilters) => {
-    setFilterLoading(true)
-
-    // Simular delay de filtrado para mejor UX
-    await new Promise((resolve) => setTimeout(resolve, 300))
-
-    let tempRooms = allRooms
-
-    // Use current state if no filters passed
     const currentCapacity = filters?.capacity ?? capacity
     const currentBedType = filters?.bedType ?? bedType
     const currentView = filters?.view ?? view
@@ -101,24 +161,15 @@ export const useRoomFilters = (allRooms: Room[]) => {
       filters?.priceRange ?? (minPrice || maxPrice ? { min: minPrice || 0, max: maxPrice || 9999 } : undefined)
     const currentAmenities = filters?.amenities ?? (selectedAmenities.length > 0 ? selectedAmenities : undefined)
 
-    if (currentCapacity) {
-      tempRooms = tempRooms.filter((room) => room.capacity >= currentCapacity)
-    }
-    if (currentBedType) {
-      tempRooms = tempRooms.filter((room) => room.bedType === currentBedType)
-    }
-    if (currentView) {
-      tempRooms = tempRooms.filter((room) => room.view === currentView)
-    }
-    if (currentPriceRange) {
-      tempRooms = tempRooms.filter((room) => room.price >= currentPriceRange.min && room.price <= currentPriceRange.max)
-    }
-    if (currentAmenities && currentAmenities.length > 0) {
-      tempRooms = tempRooms.filter((room) => currentAmenities.some((amenity) => room.amenities.includes(amenity)))
-    }
+    const apiFilters: Partial<RoomFilters> = {}
 
-    setFilteredRooms(tempRooms)
-    setFilterLoading(false)
+    if (currentCapacity) apiFilters.capacity = currentCapacity
+    if (currentBedType) apiFilters.bedType = currentBedType
+    if (currentView) apiFilters.view = currentView
+    if (currentPriceRange) apiFilters.priceRange = currentPriceRange
+    if (currentAmenities && currentAmenities.length > 0) apiFilters.amenities = currentAmenities
+
+    await loadRoomsWithFilters(apiFilters)
   }
 
   const clearFilters = () => {
@@ -128,23 +179,41 @@ export const useRoomFilters = (allRooms: Room[]) => {
     setMinPrice(undefined)
     setMaxPrice(undefined)
     setSelectedAmenities([])
-    setFilteredRooms(allRooms)
+    loadRoomsWithFilters()
   }
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      applyFilters()
-    }, 300)
-    return () => clearTimeout(timer)
+    const currentFilters: Partial<RoomFilters> = {}
+
+    if (capacity) currentFilters.capacity = capacity
+    if (bedType) currentFilters.bedType = bedType
+    if (view) currentFilters.view = view
+    if (minPrice || maxPrice) {
+      currentFilters.priceRange = { min: minPrice || 0, max: maxPrice || 9999 }
+    }
+    if (selectedAmenities.length > 0) currentFilters.amenities = selectedAmenities
+
+
+    const applyFiltersAsync = async () => {
+      setFilterLoading(true)
+      try {
+        const roomsData = await fetchRooms(currentFilters)
+        setRooms(roomsData)
+        setFilteredRooms(roomsData)
+      } catch (error) {
+        console.error("Failed to apply filters:", error)
+        setRooms([])
+        setFilteredRooms([])
+      } finally {
+        setFilterLoading(false)
+      }
+    }
+
+    applyFiltersAsync()
   }, [capacity, bedType, view, minPrice, maxPrice, selectedAmenities])
 
-  // Update filtered rooms when allRooms changes
-  useEffect(() => {
-    setFilteredRooms(allRooms)
-  }, [allRooms])
-
   return {
-    // State
+    rooms,
     filteredRooms,
     filterLoading,
     capacity,
@@ -154,12 +223,12 @@ export const useRoomFilters = (allRooms: Room[]) => {
     maxPrice,
     selectedAmenities,
     isExpanded,
-
-    // Static data
     amenitiesList,
     viewOptions,
-
-    // Actions
+    amenitiesLoading,
+    bedTypesList,
+    bedTypesLoading,
+    viewsLoading,
     setCapacity,
     setBedType,
     setView,

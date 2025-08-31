@@ -1,10 +1,56 @@
-import type { ApiResponse, ApiRoom, Room } from "../types/room.types";
+import type {
+  ApiResponse,
+  ApiRoom,
+  Room,
+  RoomFilters,
+} from "../types/room.types";
 
 const API_BASE_URL = "http://localhost:3000/api";
 
-export async function fetchRooms(): Promise<Room[]> {
+export async function fetchRooms(
+  filters?: Partial<RoomFilters>
+): Promise<Room[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/habitaciones`);
+    const queryParams = new URLSearchParams();
+
+    // Agregar logs para depuración
+    console.log("Aplicando filtros:", filters);
+
+    if (filters?.capacity) {
+      queryParams.append("capacidad", filters.capacity.toString());
+    }
+
+    if (filters?.bedType) {
+      queryParams.append("tipo_cama", filters.bedType);
+    }
+
+    if (filters?.view) {
+      queryParams.append("vista", filters.view);
+    }
+
+    if (filters?.priceRange) {
+      queryParams.append("precio_min", filters.priceRange.min.toString());
+      queryParams.append("precio_max", filters.priceRange.max.toString());
+    }
+
+    if (filters?.amenities && filters.amenities.length > 0) {
+      queryParams.append("comodidades", filters.amenities.join(","));
+    }
+
+    const url = queryParams.toString()
+      ? `${API_BASE_URL}/habitaciones?${queryParams.toString()}`
+      : `${API_BASE_URL}/habitaciones`;
+
+    // Log para ver la URL completa
+    console.log("URL de la petición:", url);
+
+    const response = await fetch(url, {
+      // Desactivar la caché para asegurar respuestas frescas
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache",
+      },
+    });
 
     if (!response.ok) {
       throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -12,13 +58,21 @@ export async function fetchRooms(): Promise<Room[]> {
 
     const apiResponse: ApiResponse = await response.json();
 
+    // Log para ver la respuesta de la API
+    console.log("Respuesta de la API:", apiResponse);
+
     if (!apiResponse.success) {
       throw new Error(
         apiResponse.message || "Error al cargar las habitaciones"
       );
     }
 
-    return apiResponse.data.map(transformApiDataToRoom);
+    const transformedRooms = apiResponse.data.map(transformApiDataToRoom);
+
+    // Log para ver los datos transformados
+    console.log("Habitaciones transformadas:", transformedRooms);
+
+    return transformedRooms;
   } catch (error) {
     console.error("Error fetching rooms:", error);
     throw error instanceof Error
@@ -40,46 +94,24 @@ export function transformApiDataToRoom(apiRoom: ApiRoom): Room {
     ...(apiRoom.comodidades?.slice(0, 4).map((comodidad) => {
       return {
         icono: comodidad.icono?.icon || null, // Retorna el ícono si existe, o null si no
-        nombre: comodidad.icono?.text ||null, // Retorna el nombre, o un valor por defecto
+        nombre: comodidad.icono?.text || null, // Retorna el nombre, o un valor por defecto
       };
     }) || []),
   ];
 
-  const bedTypeMap: { [key: string]: Room["bedType"] } = {
-    King: "King",
-    Queen: "Queen",
-    Twin: "Twin",
-    Double: "Double",
-    Single: "Single",
-    Matrimonial: "King",
-    Doble: "Double",
-    Individual: "Single",
-    Sencilla: "Single",
-    "Cama King": "King",
-    "Cama Queen": "Queen",
-  };
-
-  const viewMap: { [key: string]: Room["view"] } = {
-    "Vista al Mar": "Ocean",
-    "Vista a la Ciudad": "City",
-    "Vista al Jardín": "Garden",
-    "Vista a la Montaña": "Mountain",
-  };
-
-  const bedTypeName =
-    apiRoom.tipo_habitacion.cama_principal?.nombre_tipo_cama || "King";
-  const bedType = bedTypeMap[bedTypeName] || "King";
-
-  const view = viewMap[apiRoom.vista] || "City";
+  const bedType =
+    apiRoom.tipo_habitacion.cama_principal?.nombre_tipo_cama ||
+    "Cama Individual";
+  const view = apiRoom.vista || "Vista al Mar";
 
   return {
-    id: `r${apiRoom.habitacion_id}`,
+    id: `${apiRoom.habitacion_id}`,
     name: apiRoom.tipo_habitacion.nombre_tipo,
     price: Number.parseFloat(apiRoom.tipo_habitacion.precio_base_noche),
     image: mainImage,
     capacity: apiRoom.tipo_habitacion.capacidad_maxima,
     bedType,
     view,
-    amenities: amenities
+    amenities: amenities,
   };
 }

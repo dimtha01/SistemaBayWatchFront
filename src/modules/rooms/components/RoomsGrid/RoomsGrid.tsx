@@ -2,6 +2,7 @@ import { RoomCard } from "../RoomCard/RoomCard"
 import { EmptyState } from "../EmptyState/EmptyState"
 import type { Room } from "../../types/room.types"
 import { RoomCardSkeleton } from "../RoomCardSkeleton/RoomCardSkeleton.tsx"
+import { useEffect } from "react"
 
 interface RoomsGridProps {
   rooms: Room[]
@@ -13,18 +14,33 @@ interface RoomsGridProps {
 }
 
 export const RoomsGrid = ({ rooms, loading, error, itemsPerPage, onRetry, onClearFilters }: RoomsGridProps) => {
+  // Log para depuración
+  useEffect(() => {
+    console.log("RoomsGrid renderizado con:", {
+      roomsCount: rooms.length,
+      loading,
+      error
+    });
+    
+    if (rooms.length > 0) {
+      console.log("Primera habitación:", rooms[0]);
+    }
+  }, [rooms, loading, error]);
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
       {loading ? (
         // Mostrar skeletons durante la carga
-        Array.from({ length: itemsPerPage }).map((_, index) => <RoomCardSkeleton key={`skeleton-${index}`} />)
+        Array.from({ length: itemsPerPage }).map((_, index) => (
+          <RoomCardSkeleton key={`skeleton-${index}`} />
+        ))
       ) : error ? (
         <EmptyState type="error" onAction={onRetry} actionLabel="Intentar de nuevo" />
       ) : rooms.length > 0 ? (
-        // Mostrar habitaciones reales
-        rooms.map((room, index) => (
+        // Mostrar habitaciones reales - usando solo el ID como key
+        rooms.map((room) => (
           <RoomCard
-            key={`${room.id}-${index}`}
+            key={`room-${room.id}`} // Usar solo el ID como key, sin Math.random()
             id={room.id}
             name={room.name}
             price={room.price}

@@ -7,9 +7,9 @@ export interface Room {
   originalPrice?: number;
   image: string;
   capacity: number;
-  bedType: "King" | "Queen" | "Twin" | "Double" | "Single";
-  view: "Ocean" | "City" | "Garden" | "Mountain" | "Pool";
-  amenities: string[];
+  bedType: string; // Now accepts any string from API
+  view: string; // Now accepts any string from API
+  amenities: object[];
   rating?: number;
   reviewCount?: number;
   isPopular?: boolean;
@@ -108,4 +108,54 @@ export interface ViewIconsMap {
 
 export interface ViewLabelsMap {
   [key: string]: string;
+}
+
+export interface ApiAmenity {
+  comodidad_id: number;
+  nombre_comodidad: string;
+  descripcion: string;
+  categoria_comodidad: string;
+  icon: string;
+  text: string;
+  habitacion_id: number;
+  numero_habitacion: string;
+}
+
+export interface AmenitiesApiResponse {
+  success: boolean;
+  message: string;
+  data: ApiAmenity[];
+}
+
+export interface ApiBedType {
+  tipo_cama_id: number;
+  nombre_tipo_cama: string;
+  descripcion: string;
+  capacidad_personas: number;
+  dimensiones: string;
+  estado: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BedTypesApiResponse {
+  success: boolean;
+  message: string;
+  data: ApiBedType[];
+}
+
+export interface ApiRoomView {
+  vista_id: number;
+  nombre_vista: string;
+  descripcion: string;
+  precio_adicional: string;
+  estado: string;
+  fecha_creacion: string;
+  fecha_actualizacion: string;
+}
+
+export interface RoomViewsApiResponse {
+  success: boolean;
+  message: string;
+  data: ApiRoomView[];
 }
