@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback } from "react";
 import type { BookingData } from "../types/room.types";
 

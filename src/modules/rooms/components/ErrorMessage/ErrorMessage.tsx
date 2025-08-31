@@ -1,7 +1,5 @@
-interface ErrorMessageProps {
-  error: string
-  onRetry: () => void
-}
+import type { ErrorMessageProps } from "../../types"
+
 
 export const ErrorMessage = ({ error, onRetry }: ErrorMessageProps) => {
   return (

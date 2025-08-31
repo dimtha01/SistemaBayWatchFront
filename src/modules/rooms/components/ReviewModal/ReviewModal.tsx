@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { useState } from "react"
 import { X, Star } from "lucide-react"
@@ -7,12 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import type { Review } from "../../types"
+import type { ReviewModalProps } from "../../types"
 
-interface ReviewModalProps {
-  onClose: () => void
-  onSubmit: (review: Review) => void
-}
 
 export const ReviewModal = ({ onClose, onSubmit }: ReviewModalProps) => {
   const [name, setName] = useState("")

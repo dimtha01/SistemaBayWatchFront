@@ -177,5 +177,22 @@ export interface Review {
   comment: string;
   date: string;
 }
+export interface EmptyStateProps {
+  type: "error" | "no-results"
+  onAction: () => void
+  actionLabel: string
+}
 
-
+export interface ErrorMessageProps {
+  error: string
+  onRetry: () => void
+}
+export interface ResultsInfoProps {
+  startIndex: number
+  endIndex: number
+  totalItems: number
+}
+export interface ReviewModalProps {
+  onClose: () => void
+  onSubmit: (review: Review) => void
+}

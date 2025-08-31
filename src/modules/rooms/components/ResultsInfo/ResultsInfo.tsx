@@ -1,8 +1,5 @@
-interface ResultsInfoProps {
-  startIndex: number
-  endIndex: number
-  totalItems: number
-}
+import type { ResultsInfoProps } from "../../types"
+
 
 export const ResultsInfo = ({ startIndex, endIndex, totalItems }: ResultsInfoProps) => {
   return (

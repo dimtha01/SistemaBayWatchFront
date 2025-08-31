@@ -1,8 +1,5 @@
-interface EmptyStateProps {
-  type: "error" | "no-results"
-  onAction: () => void
-  actionLabel: string
-}
+import type { EmptyStateProps } from "../../types"
+
 
 export const EmptyState = ({ type, onAction, actionLabel }: EmptyStateProps) => {
   const content = {
