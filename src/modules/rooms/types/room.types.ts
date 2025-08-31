@@ -9,7 +9,7 @@ export interface Room {
   capacity: number;
   bedType: string; // Now accepts any string from API
   view: string; // Now accepts any string from API
-  amenities: object[];
+  amenities: Amenity[];
   rating?: number;
   reviewCount?: number;
   isPopular?: boolean;
@@ -158,4 +158,13 @@ export interface RoomViewsApiResponse {
   success: boolean;
   message: string;
   data: ApiRoomView[];
+}
+export interface View {
+  value: string; // o el tipo adecuado
+  label: string; // o el tipo adecuado
+}
+
+export interface Amenity {
+  icono: string; // Aquí defines el tipo de icono
+  nombre: string; // Aquí defines el nombre de la amenidad
 }

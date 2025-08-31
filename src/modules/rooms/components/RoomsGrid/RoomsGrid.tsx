@@ -1,8 +1,8 @@
-import { RoomCard } from "../RoomCard/RoomCard"
 import { EmptyState } from "../EmptyState/EmptyState"
 import type { Room } from "../../types/room.types"
 import { RoomCardSkeleton } from "../RoomCardSkeleton/RoomCardSkeleton.tsx"
 import { useEffect } from "react"
+import { RoomCard } from "../RoomCard/RoomCard.tsx"
 
 interface RoomsGridProps {
   rooms: Room[]

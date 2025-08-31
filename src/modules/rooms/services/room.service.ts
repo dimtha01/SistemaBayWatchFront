@@ -82,19 +82,17 @@ export async function fetchRooms(
 }
 
 export function transformApiDataToRoom(apiRoom: ApiRoom): Room {
-  // Get main image or first available image
   const mainImage =
     apiRoom.imagenes?.find((img) => img.es_principal === 1)?.ruta_archivo ||
     apiRoom.ruta_archivo ||
     apiRoom.imagenes?.[0]?.ruta_archivo ||
     "/comfortable-hotel-room.png";
 
-  // Transform amenities to simple string array
   const amenities = [
     ...(apiRoom.comodidades?.slice(0, 4).map((comodidad) => {
       return {
-        icono: comodidad.icono?.icon || null, // Retorna el ícono si existe, o null si no
-        nombre: comodidad.icono?.text || null, // Retorna el nombre, o un valor por defecto
+        icono: comodidad.icono?.icon || "default-icon.png", // Valor por defecto si no hay icono
+        nombre: comodidad.icono?.text || "Sin nombre", // Valor por defecto si no hay nombre
       };
     }) || []),
   ];
@@ -111,6 +109,7 @@ export function transformApiDataToRoom(apiRoom: ApiRoom): Room {
     capacity: apiRoom.tipo_habitacion.capacidad_maxima,
     bedType,
     view,
-    amenities: amenities,
+    amenities,
   };
 }
+

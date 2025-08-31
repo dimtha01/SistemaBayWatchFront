@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import type { RoomCardProps } from "../../types/room.types";
+import type { BookingData, RoomCardProps } from "../../types/room.types";
 import { useRoomCardState, useRoomBooking, useAmenityIcons } from "../../hook";
 import {
   VIEW_ICONS,
@@ -31,7 +31,7 @@ import {
   DEFAULT_RESERVED_PERIODS,
 } from "../../utils/room-card.constants";
 import BookingWidget from "@/components/RoomDetails/BookingWidget";
-import { IconName } from "../../utils/iconMap";
+import { useEffect, useState, type ReactNode } from "react";
 
 export const RoomCard = ({
   id,
@@ -70,10 +70,26 @@ export const RoomCard = ({
   const unavailableDates = DEFAULT_UNAVAILABLE_DATES;
   const reservedPeriods = DEFAULT_RESERVED_PERIODS;
 
-  const onBookingSubmit = (data: any) => {
+  const onBookingSubmit = (data: BookingData) => {
     handleBooking(data, name, setIsModalOpen);
   };
-  console.log(amenities);
+
+  // Estado para almacenar los iconos de las amenidades
+  const [iconMap, setIconMap] = useState<{ [key: string]: ReactNode }>({});
+
+  // Cargar iconos de amenidades de forma asíncrona
+  useEffect(() => {
+    const loadIcons = async () => {
+      const icons: { [key: string]: ReactNode } = {};
+      for (const amenity of amenities) {
+        icons[amenity.icono] = await getAmenityIcon(amenity.icono);
+      }
+      setIconMap(icons);
+    };
+
+    loadIcons();
+  }, [amenities, getAmenityIcon]);
+  console.log(amenities)
 
   return (
     <Card
@@ -193,7 +209,7 @@ export const RoomCard = ({
           </div>
           <div className="flex items-center gap-1.5">
             <Bed className="w-3.5 h-3.5 text-[#F20C0C]" />
-            <span>{bedType}</span>
+            <span>Cama {bedType}</span>
           </div>
           <div className="flex items-center gap-1.5 col-span-2">
             {VIEW_ICONS[view]}
@@ -209,7 +225,7 @@ export const RoomCard = ({
                 key={index}
                 className="flex items-center gap-1 bg-[#020659]/10 rounded-full px-2 py-1 text-xs text-[#020659]"
               >
-                {getAmenityIcon(amenity.icono)}
+                {iconMap[amenity.icono]}
                 <span>{amenity.nombre}</span>
               </div>
             ))}
@@ -256,7 +272,7 @@ export const RoomCard = ({
               {/* Header del Modal */}
               <div className="relative">
                 {/* Imagen de fondo del header */}
-                <div className="h-32 bg-gradient-to-r from-[#020659] to-[#F20C0C] relative overflow-hidden">
+                <div className="h-32 bg-gradient-to-r from-[#020659] to-[#F20C1F] relative overflow-hidden">
                   <div className="absolute inset-0 bg-black/20"></div>
                   <img
                     src={image || "/placeholder.svg?height=200&width=800"}
@@ -319,7 +335,7 @@ export const RoomCard = ({
                       </div>
                       <div className="flex items-center gap-2">
                         <Bed className="w-4 h-4 text-[#F20C0C]" />
-                        <span>{bedType}</span>
+                        <span>Cama: {bedType}</span>
                       </div>
                       <div className="flex items-center gap-2 col-span-2">
                         {VIEW_ICONS[view]}
@@ -340,7 +356,7 @@ export const RoomCard = ({
                             key={index}
                             className="flex items-center gap-2 text-sm text-[#020659]"
                           >
-                            {getAmenityIcon(amenity.icono)}
+                            {iconMap[amenity.icono]}
                             <span>{amenity.nombre}</span>
                           </div>
                         ))}

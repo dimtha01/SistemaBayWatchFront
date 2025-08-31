@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import type { Room, RoomFilters, ViewOption, AmenityOption } from "../types/room.types"
+import type { Room, RoomFilters, ViewOption, AmenityOption, View } from "../types/room.types"
 import { fetchAmenities } from "../services/amenities.service"
 import { fetchBedTypes } from "../services/bedTypes.service"
 import { fetchRoomViews } from "../services/roomViews.service"
@@ -86,7 +86,7 @@ export const useRoomFilters = () => {
       setViewsLoading(true)
       try {
         const views = await fetchRoomViews()
-        const viewsWithIcons = views.map((view: any) => ({
+        const viewsWithIcons = views.map((view: View) => ({
           value: view.value,
           label: view.label,
           icon: getViewIcon(view.label),

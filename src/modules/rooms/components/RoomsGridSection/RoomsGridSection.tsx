@@ -1,9 +1,4 @@
-"use client"
-
 import { RoomFilters } from "../RoomFilters/RoomFilters"
-import { ErrorMessage } from "../ErrorMessage/ErrorMessage"
-import { useEffect } from "react"
-import { useRoomFilters } from "../../hook"
 
 export const RoomsGridSection = () => {
 
