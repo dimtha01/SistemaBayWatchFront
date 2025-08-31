@@ -7,7 +7,6 @@ import { Star, StarHalf, Plus } from "lucide-react";
 import { ReviewModal } from "../ReviewModal";
 import type { Review } from "../../types";
 
-
 interface RoomReviewsProps {
   reviews: Review[];
   averageRating: number;
@@ -44,6 +43,7 @@ export const RoomReviews = ({
 
     return stars;
   };
+  console.log(reviews);
 
   return (
     <>

@@ -1,198 +1,57 @@
-import { useEffect, useState } from "react";
-import { ArrowLeft, MapPin, Star, StarHalf } from "lucide-react";
-import { Link } from "react-router-dom";
+"use client";
 
-import { BookingWidget, type BookingData } from "@/modules/booking";
+import { useEffect, useState } from "react";
+import { ArrowLeft, MapPin, Star, StarHalf, Loader2 } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
 import {
-  RoomAmenities,
-  RoomDescription,
   RoomGallery,
+  RoomDescription,
+  RoomAmenities,
   RoomReviews,
 } from "@/modules/rooms";
+import { BookingWidget, type BookingData } from "@/modules/booking";
+import { useRoomDetails } from "@/modules/rooms/hook/useRoomDetails";
+
 const RoomDetailsPage = () => {
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      name: "Ana García",
-      avatar: "/avatars/ana.jpg",
-      rating: 5,
-      comment:
-        "¡Una suite espectacular! Las vistas al mar son impresionantes y el jacuzzi privado fue el toque perfecto. El servicio de habitaciones fue impecable. ¡Volveremos sin duda!",
-      date: "15 de Noviembre, 2023",
-    },
-    {
-      id: 2,
-      name: "Juan Pérez",
-      avatar: "/avatars/juan.jpg",
-      rating: 4.5,
-      comment:
-        "Muy buena experiencia. La suite es muy cómoda y las vistas son increíbles. Solo un pequeño detalle con el minibar, pero fue resuelto rápidamente. Recomendado.",
-      date: "10 de Octubre, 2023",
-    },
-  ]);
+  const { id } = useParams<{ id: string }>();
+  const roomId = id || "/not/Erro"; // Default to room 1 if no ID provided
 
-  const roomImages = [
-    "/images/habitacion ejecutiva.webp",
-    "/images/habitacion ejecutiva.webp",
-    "/images/habitacion ejecutiva.webp",
-    "/images/habitacion ejecutiva.webp",
-    "/images/habitacion ejecutiva.webp",
-  ];
+  const { roomData, loading, error, refetch } = useRoomDetails(roomId);
 
-  const pricePerNight = 650;
+  const [reviews, setReviews] = useState(roomData?.reviews || []);
 
-  // ===== CONFIGURACIÓN DE FECHAS NO DISPONIBLES =====
+  useEffect(() => {
+    if (roomData?.reviews) {
+      setReviews(roomData.reviews);
+    }
+  }, [roomData]);
 
-  // Fechas individuales no disponibles
-  const unavailableDates = [
-    // Fechas festivas
-    "2024-12-24", // Nochebuena
-    "2024-12-25", // Navidad
-    "2024-12-31", // Nochevieja
-    "2025-01-01", // Año Nuevo
-    "2025-02-14", // San Valentín (ya reservado)
-    "2025-04-18", // Viernes Santo
-    "2025-04-19", // Sábado Santo
-    "2025-04-20", // Domingo de Resurrección
-    "2025-05-01", // Día del Trabajador
-    "2025-07-05", // Día de la Independencia
-    "2025-07-24", // Natalicio de Bolívar
-    "2025-10-12", // Día de la Resistencia Indígena
-  ];
+  const unavailableDates: string[] = [];
+  const reservedPeriods =
+    roomData?.reservedDates.map((period) => ({
+      start: period.start,
+      end: period.end,
+      reason: "Reserva confirmada",
+    })) || [];
 
-  // Períodos reservados (rangos de fechas)
-  const reservedPeriods = [
-    {
-      start: "2024-12-15",
-      end: "2024-12-23",
-      reason: "Reserva confirmada - Temporada navideña",
-    },
-    {
-      start: "2024-12-26",
-      end: "2024-12-30",
-      reason: "Reserva confirmada - Fin de año",
-    },
-    {
-      start: "2025-01-02",
-      end: "2025-01-08",
-      reason: "Mantenimiento programado",
-    },
-    {
-      start: "2025-01-15",
-      end: "2025-01-22",
-      reason: "Reserva confirmada - Evento corporativo",
-    },
-    {
-      start: "2025-02-10",
-      end: "2025-02-17",
-      reason: "Reserva confirmada - San Valentín",
-    },
-    {
-      start: "2025-03-01",
-      end: "2025-03-05",
-      reason: "Renovación de mobiliario",
-    },
-    {
-      start: "2025-03-20",
-      end: "2025-03-27",
-      reason: "Reserva confirmada - Semana Santa",
-    },
-    {
-      start: "2025-04-15",
-      end: "2025-04-22",
-      reason: "Reserva confirmada - Semana Santa",
-    },
-    {
-      start: "2025-05-15",
-      end: "2025-05-20",
-      reason: "Evento privado - Boda",
-    },
-    {
-      start: "2025-06-01",
-      end: "2025-06-07",
-      reason: "Mantenimiento de aires acondicionados",
-    },
-    {
-      start: "2025-07-01",
-      end: "2025-07-08",
-      reason: "Reserva confirmada - Temporada vacacional",
-    },
-    {
-      start: "2025-07-20",
-      end: "2025-07-28",
-      reason: "Reserva confirmada - Vacaciones de verano",
-    },
-    {
-      start: "2025-08-10",
-      end: "2025-08-17",
-      reason: "Reserva confirmada - Temporada alta",
-    },
-    {
-      start: "2025-09-05",
-      end: "2025-09-12",
-      reason: "Conferencia internacional",
-    },
-    {
-      start: "2025-10-08",
-      end: "2025-10-15",
-      reason: "Reserva confirmada - Puente festivo",
-    },
-    {
-      start: "2025-11-01",
-      end: "2025-11-05",
-      reason: "Mantenimiento general",
-    },
-    {
-      start: "2025-11-20",
-      end: "2025-11-27",
-      reason: "Evento corporativo - Convención",
-    },
-    {
-      start: "2025-12-10",
-      end: "2025-12-31",
-      reason: "Reserva confirmada - Temporada navideña",
-    },
-  ];
-
-  // Configuración adicional para el widget
+  // Configuration for booking widget
   const bookingConfig = {
-    maxGuests: 4, // Máximo 4 huéspedes para esta suite
-    minNights: 1, // Mínimo 2 noches para suite premium
-    maxNights: 30, // Máximo 30 noches
+    maxGuests: roomData?.roomType.maxCapacity || 4,
+    minNights: 1,
+    maxNights: 30,
   };
 
-  // ===== FUNCIONES DE MANEJO =====
-
-  // Define a type for the booking data
-
-  // Función principal para manejar la reserva
   const handleBooking = (data: BookingData) => {
     console.log("Reserva realizada:", data);
-
-    // Aquí puedes agregar lógica adicional como:
-    // - Enviar datos al servidor
-    // - Mostrar notificación de éxito
-    // - Redirigir a página de confirmación
-    // - Actualizar estado de disponibilidad
-
-    // Ejemplo de procesamiento:
     try {
-      // Simular envío al servidor
       console.log("Procesando reserva...", {
-        roomType: "Suite Ocean View Premium",
+        roomId: roomData?.id,
+        roomType: roomData?.roomType.name,
         bookingData: data,
         timestamp: new Date().toISOString(),
       });
-
-      // Aquí podrías hacer una llamada a tu API
-      // await bookingAPI.createReservation(data);
-
-      // Mostrar notificación de éxito (si tienes un sistema de notificaciones)
-      // showNotification("Reserva confirmada exitosamente", "success");
     } catch (error) {
       console.error("Error al procesar la reserva:", error);
-      // Manejar errores
-      // showNotification("Error al procesar la reserva", "error");
     }
   };
 
@@ -215,9 +74,6 @@ const RoomDetailsPage = () => {
     };
     setReviews([review, ...reviews]);
   };
-  // Calcular promedio de rating
-  const averageRating =
-    reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length;
 
   useEffect(() => {
     window.scrollTo({
@@ -227,13 +83,41 @@ const RoomDetailsPage = () => {
     });
   }, []);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Cargando detalles de la habitación...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !roomData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">
+            Error al cargar la habitación: {error}
+          </p>
+          <button
+            onClick={refetch}
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen">
-      {/* Imagen de fondo con blur */}
       <div
         className="fixed inset-0 z-0"
         style={{
-          backgroundImage: `url('/images/habitacion ejecutiva.webp ')`,
+          backgroundImage: `url('${roomData.mainImage}')`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundAttachment: "fixed",
@@ -242,7 +126,6 @@ const RoomDetailsPage = () => {
         <div className="absolute inset-0 backdrop-blur-md bg-white/40"></div>
       </div>
 
-      {/* Contenido principal */}
       <main className="relative z-10 pt-16 md:pt-24 pb-12 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link
@@ -256,10 +139,9 @@ const RoomDetailsPage = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             <div className="lg:col-span-2">
-              {/* Información principal */}
               <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 mb-6 md:mb-8">
                 <h1 className="text-2xl md:text-4xl font-bold mb-4">
-                  Suite Ocean View Premium
+                  {roomData.roomType.name}
                 </h1>
                 <div className="flex flex-col sm:flex-row sm:items-center text-gray-600 mb-6 gap-2 sm:gap-0">
                   <div className="flex items-center">
@@ -271,50 +153,47 @@ const RoomDetailsPage = () => {
                       <StarHalf className="fill-current h-4 md:h-5 w-4 md:w-5" />
                     </div>
                     <span className="text-sm md:text-base">
-                      {averageRating.toFixed(1)} ({reviews.length} reseñas)
+                      {roomData.reviewStats.averageRating.toFixed(1)} (
+                      {roomData.reviewStats.totalReviews} reseñas)
                     </span>
                   </div>
                   <span className="hidden sm:inline mx-3">•</span>
                   <span className="flex items-center text-sm md:text-base">
                     <MapPin className="mr-1 h-3 md:h-4 w-3 md:w-4" />
-                    Piso 12, Vista al Mar
+                    Piso {roomData.floor}, {roomData.view}
                   </span>
                 </div>
 
                 <RoomGallery
-                  images={roomImages}
-                  mainTitle="Suite Ocean View Premium"
+                  images={roomData.images}
+                  mainTitle={roomData.roomType.name}
                 />
               </div>
 
-              {/* Descripción */}
               <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 mb-6 md:mb-8">
                 <RoomDescription
-                  description="Sumérgete en el lujo y la comodidad de nuestra Suite Ocean View Premium. Con un diseño elegante y moderno, esta suite ofrece vistas espectaculares al océano desde su balcón privado. Disfruta de una espaciosa sala de estar, un dormitorio principal con cama king-size y un baño de mármol con jacuzzi. Ideal para parejas o familias pequeñas que buscan una experiencia inolvidable."
-                  details="Cada detalle ha sido cuidadosamente seleccionado para garantizar una estancia de máximo confort, desde la ropa de cama de algodón egipcio hasta el sistema de entretenimiento de última generación."
+                  description={roomData.roomType.description}
+                  details={`Habitación ${roomData.roomNumber} - ${roomData.roomType.bedSummary}. Capacidad máxima: ${roomData.roomType.maxCapacity} huéspedes.`}
                 />
               </div>
 
-              {/* Amenidades */}
               <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8 mb-6 md:mb-8">
-                <RoomAmenities />
+                <RoomAmenities amenitiesData={roomData.amenities} />
               </div>
 
-              {/* Reseñas */}
               <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-xl p-4 md:p-8">
                 <RoomReviews
                   reviews={reviews}
-                  averageRating={averageRating}
-                  totalReviews={reviews.length}
+                  averageRating={roomData.reviewStats.averageRating}
+                  totalReviews={roomData.reviewStats.totalReviews}
                   onAddReview={handleAddReview}
                 />
               </div>
             </div>
 
-            {/* Widget de reserva con fechas no disponibles */}
             <div className="lg:col-span-1">
               <BookingWidget
-                pricePerNight={pricePerNight}
+                pricePerNight={roomData.roomType.basePrice}
                 onBooking={handleBooking}
                 maxGuests={bookingConfig.maxGuests}
                 minNights={bookingConfig.minNights}

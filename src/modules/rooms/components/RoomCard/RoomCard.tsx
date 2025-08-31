@@ -246,7 +246,7 @@ export const RoomCard = ({
             aria-label="Ver detalles de la habitación"
           >
             <Link
-              to={`/roomsDetails?room=${id}`}
+              to={`/roomsDetails/${id}`}
               className="flex w-full justify-center items-center"
             >
               <Eye className="w-3.5 h-3.5 mr-1.5 group-hover:scale-110 transition-transform" />
