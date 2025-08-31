@@ -5,7 +5,7 @@ import { RoomGallery } from "@/components/RoomDetails/RoomGallery";
 import { RoomDescription } from "@/components/RoomDetails/RoomDescription";
 import { RoomAmenities } from "@/components/RoomDetails/RoomAmenities";
 import { RoomReviews } from "@/components/RoomDetails/RoomReviews";
-import { BookingWidget } from "@/components/RoomDetails/BookingWidget";
+import { BookingWidget } from "@/modules/booking";
 const RoomDetailsPage = () => {
   const [reviews, setReviews] = useState([
     {

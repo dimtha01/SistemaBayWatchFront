@@ -1,24 +1,18 @@
+"use client"
+
+import type React from "react"
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
+import { useState, useMemo, useEffect, useCallback } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Separator } from "@/components/ui/separator"
+import { Badge } from "@/components/ui/badge"
 import {
   CreditCard,
   DollarSign,
@@ -36,59 +30,59 @@ import {
   X,
   Share2,
   Download,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
 interface BookingWidgetProps {
-  pricePerNight: number;
-  onBooking: (bookingData: any) => void;
-  maxGuests?: number;
-  minNights?: number;
-  maxNights?: number;
-  unavailableDates?: string[];
+  pricePerNight: number
+  onBooking: (bookingData: any) => void
+  maxGuests?: number
+  minNights?: number
+  maxNights?: number
+  unavailableDates?: string[]
   reservedPeriods?: {
-    start: string;
-    end: string;
-    reason?: string;
-    guestName?: string;
-    status?: "confirmed" | "pending" | "checkout";
-  }[];
+    start: string
+    end: string
+    reason?: string
+    guestName?: string
+    status?: "confirmed" | "pending" | "checkout"
+  }[]
 }
 
 interface BookingData {
-  id: string;
-  checkIn: string;
-  checkOut: string;
-  guests: number;
-  nights: number;
-  pricePerNight: number;
-  subtotal: number;
-  taxes: number;
-  serviceFee: number;
-  cleaningFee: number;
-  total: number;
-  bookingDate: string;
-  status: "pending" | "confirmed" | "cancelled";
-  paymentMethod: string;
-  paymentDetails?: any;
+  id: string
+  checkIn: string
+  checkOut: string
+  guests: number
+  nights: number
+  pricePerNight: number
+  subtotal: number
+  taxes: number
+  serviceFee: number
+  cleaningFee: number
+  total: number
+  bookingDate: string
+  status: "pending" | "confirmed" | "cancelled"
+  paymentMethod: string
+  paymentDetails?: any
   guestInfo?: {
-    name: string;
-    email: string;
-    phone: string;
-    document?: string;
-    notes?: string;
-  };
+    name: string
+    email: string
+    phone: string
+    document?: string
+    notes?: string
+  }
 }
 
 interface PaymentMethod {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  description: string;
-  color: string;
-  available: boolean;
+  id: string
+  name: string
+  icon: React.ReactNode
+  description: string
+  color: string
+  available: boolean
 }
 
 export const BookingWidget = ({
@@ -100,20 +94,20 @@ export const BookingWidget = ({
   unavailableDates = [],
   reservedPeriods = [],
 }: BookingWidgetProps) => {
-  const [checkIn, setCheckIn] = useState<Date | undefined>();
-  const [checkOut, setCheckOut] = useState<Date | undefined>();
-  const [guests, setGuests] = useState("2");
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
-  const [showCheckInCalendar, setShowCheckInCalendar] = useState(false);
-  const [showCheckOutCalendar, setShowCheckOutCalendar] = useState(false);
+  const [checkIn, setCheckIn] = useState<Date | undefined>()
+  const [checkOut, setCheckOut] = useState<Date | undefined>()
+  const [guests, setGuests] = useState("2")
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("")
+  const [showCheckInCalendar, setShowCheckInCalendar] = useState(false)
+  const [showCheckOutCalendar, setShowCheckOutCalendar] = useState(false)
   const [guestInfo, setGuestInfo] = useState({
     name: "",
     email: "",
     phone: "",
     document: "",
     notes: "",
-  });
+  })
 
   // ✅ ESTADO ACTUALIZADO DE PAYMENT DETAILS CON TODOS LOS CAMPOS
   const [paymentDetails, setPaymentDetails] = useState({
@@ -128,16 +122,14 @@ export const BookingWidget = ({
     cryptoTxHash: "",
     zelleEmail: "",
     zelleReference: "",
-  });
+  })
 
-  const [paymentStep, setPaymentStep] = useState<
-    "method" | "details" | "guest" | "success"
-  >("method");
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [bookingId, setBookingId] = useState("");
-  const [dateErrors, setDateErrors] = useState<{ [key: string]: string }>({});
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [isValidBooking, setIsValidBooking] = useState(false);
+  const [paymentStep, setPaymentStep] = useState<"method" | "details" | "guest" | "success">("method")
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const [bookingId, setBookingId] = useState("")
+  const [dateErrors, setDateErrors] = useState<{ [key: string]: string }>({})
+  const [termsAccepted, setTermsAccepted] = useState(false)
+  const [isValidBooking, setIsValidBooking] = useState(false)
 
   // Métodos de pago disponibles
   const paymentMethods: PaymentMethod[] = [
@@ -189,38 +181,38 @@ export const BookingWidget = ({
       color: "bg-indigo-500",
       available: true,
     },
-  ];
+  ]
 
   // Obtener fecha mínima (hoy)
-  const today = new Date();
+  const today = new Date()
 
   // ✅ FUNCIÓN PARA VERIFICAR SI UNA FECHA ESTÁ DESHABILITADA
   const isDateDisabled = useCallback(
     (date: Date): boolean => {
       // Fechas pasadas
-      if (date < today) return true;
+      if (date < today) return true
 
-      const dateString = format(date, "yyyy-MM-dd");
+      const dateString = format(date, "yyyy-MM-dd")
 
       // Fechas individuales no disponibles
-      if (unavailableDates.includes(dateString)) return true;
+      if (unavailableDates.includes(dateString)) return true
 
       // Verificar períodos reservados (intervalo semi-abierto [start, end))
       return reservedPeriods.some((period) => {
-        const startDate = new Date(period.start);
-        const endDate = new Date(period.end);
-        return date >= startDate && date < endDate;
-      });
+        const startDate = new Date(period.start)
+        const endDate = new Date(period.end)
+        return date >= startDate && date < endDate
+      })
     },
-    [unavailableDates, reservedPeriods]
-  );
+    [unavailableDates, reservedPeriods],
+  )
 
   // ✅ FUNCIÓN MEJORADA PARA OBTENER MODIFICADORES CON COLORES CORREGIDOS
   const getDateModifiers = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const modifiers: any = {};
+    const modifiers: any = {}
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const modifiersClassNames: any = {};
+    const modifiersClassNames: any = {}
 
     // ✅ CSS personalizado para forzar los colores
     const customStyles = `
@@ -279,123 +271,109 @@ export const BookingWidget = ({
         text-decoration: line-through !important;
         border-radius: 6px !important;
       }
-    `;
+    `
 
     // Inyectar estilos si no existen
     if (!document.getElementById("calendar-custom-styles")) {
-      const styleElement = document.createElement("style");
-      styleElement.id = "calendar-custom-styles";
-      styleElement.textContent = customStyles;
-      document.head.appendChild(styleElement);
+      const styleElement = document.createElement("style")
+      styleElement.id = "calendar-custom-styles"
+      styleElement.textContent = customStyles
+      document.head.appendChild(styleElement)
     }
 
     // Marcar fechas no disponibles
-    const unavailableDateObjects = unavailableDates.map(
-      (dateStr) => new Date(dateStr)
-    );
+    const unavailableDateObjects = unavailableDates.map((dateStr) => new Date(dateStr))
     if (unavailableDateObjects.length > 0) {
-      modifiers.unavailable = unavailableDateObjects;
-      modifiersClassNames.unavailable = "calendar-unavailable";
+      modifiers.unavailable = unavailableDateObjects
+      modifiersClassNames.unavailable = "calendar-unavailable"
     }
 
     // Marcar períodos reservados con diferentes colores según el estado
     reservedPeriods.forEach((period, index) => {
-      const startDate = new Date(period.start);
-      const endDate = new Date(period.end);
-      const reservedDates: Date[] = [];
+      const startDate = new Date(period.start)
+      const endDate = new Date(period.end)
+      const reservedDates: Date[] = []
 
       // Generar todas las fechas del período (excluyendo la fecha de checkout)
-      for (
-        let date = new Date(startDate);
-        date < endDate;
-        date.setDate(date.getDate() + 1)
-      ) {
-        reservedDates.push(new Date(date));
+      for (let date = new Date(startDate); date < endDate; date.setDate(date.getDate() + 1)) {
+        reservedDates.push(new Date(date))
       }
 
-      const modifierKey = `reserved_${index}`;
-      modifiers[modifierKey] = reservedDates;
+      const modifierKey = `reserved_${index}`
+      modifiers[modifierKey] = reservedDates
 
       // Diferentes estilos según el estado
       switch (period.status) {
         case "confirmed":
-          modifiersClassNames[modifierKey] = "calendar-reserved-confirmed";
-          break;
+          modifiersClassNames[modifierKey] = "calendar-reserved-confirmed"
+          break
         case "pending":
-          modifiersClassNames[modifierKey] = "calendar-reserved-pending";
-          break;
+          modifiersClassNames[modifierKey] = "calendar-reserved-pending"
+          break
         case "checkout":
-          modifiersClassNames[modifierKey] = "calendar-reserved-checkout";
-          break;
+          modifiersClassNames[modifierKey] = "calendar-reserved-checkout"
+          break
         default:
-          modifiersClassNames[modifierKey] = "calendar-reserved-confirmed";
+          modifiersClassNames[modifierKey] = "calendar-reserved-confirmed"
       }
-    });
+    })
 
     // Marcar fechas seleccionadas
     if (checkIn) {
-      modifiers.checkIn = [checkIn];
-      modifiersClassNames.checkIn = "calendar-selected-checkin";
+      modifiers.checkIn = [checkIn]
+      modifiersClassNames.checkIn = "calendar-selected-checkin"
     }
 
     if (checkOut) {
-      modifiers.checkOut = [checkOut];
-      modifiersClassNames.checkOut = "calendar-selected-checkout";
+      modifiers.checkOut = [checkOut]
+      modifiersClassNames.checkOut = "calendar-selected-checkout"
     }
 
     // Marcar rango seleccionado
     if (checkIn && checkOut) {
-      const rangeDates: Date[] = [];
-      for (
-        let date = new Date(checkIn);
-        date < checkOut;
-        date.setDate(date.getDate() + 1)
-      ) {
+      const rangeDates: Date[] = []
+      for (let date = new Date(checkIn); date < checkOut; date.setDate(date.getDate() + 1)) {
         if (date.getTime() !== checkIn.getTime()) {
-          rangeDates.push(new Date(date));
+          rangeDates.push(new Date(date))
         }
       }
       if (rangeDates.length > 0) {
-        modifiers.selectedRange = rangeDates;
-        modifiersClassNames.selectedRange = "calendar-selected-range";
+        modifiers.selectedRange = rangeDates
+        modifiersClassNames.selectedRange = "calendar-selected-range"
       }
     }
 
-    return { modifiers, modifiersClassNames };
-  }, [unavailableDates, reservedPeriods, checkIn, checkOut]);
+    return { modifiers, modifiersClassNames }
+  }, [unavailableDates, reservedPeriods, checkIn, checkOut])
 
   // ✅ VALIDACIÓN DE FECHAS ACTUALIZADA
   const validateDates = useCallback(
     (checkInDate: Date | undefined, checkOutDate: Date | undefined) => {
-      const newDateErrors: { [key: string]: string } = {};
+      const newDateErrors: { [key: string]: string } = {}
 
-      if (!checkInDate || !checkOutDate) return true;
+      if (!checkInDate || !checkOutDate) return true
 
       // Validar que check-in no esté deshabilitado
       if (isDateDisabled(checkInDate)) {
-        newDateErrors.checkIn = "Fecha de check-in no disponible";
+        newDateErrors.checkIn = "Fecha de check-in no disponible"
       }
 
       // Validar que no haya fechas deshabilitadas en el rango
-      const start = new Date(checkInDate);
-      const end = new Date(checkOutDate);
+      const start = new Date(checkInDate)
+      const end = new Date(checkOutDate)
 
-      for (
-        let date = new Date(start);
-        date < end;
-        date.setDate(date.getDate() + 1)
-      ) {
+      for (let date = new Date(start); date < end; date.setDate(date.getDate() + 1)) {
         if (isDateDisabled(date)) {
-          newDateErrors.checkOut = "Tu estadía incluye fechas no disponibles";
-          break;
+          newDateErrors.checkOut = "Tu estadía incluye fechas no disponibles"
+          break
         }
       }
 
-      setDateErrors(newDateErrors);
-      return Object.keys(newDateErrors).length === 0;
+      setDateErrors(newDateErrors)
+      return Object.keys(newDateErrors).length === 0
     },
-    [isDateDisabled]
-  );
+    [isDateDisabled],
+  )
 
   // ✅ CÁLCULOS DE RESERVA ACTUALIZADOS
   const bookingCalculations = useMemo(() => {
@@ -406,7 +384,7 @@ export const BookingWidget = ({
         taxes: 150,
         total: 0,
         isValidDates: false,
-      };
+      }
     }
 
     if (checkOut <= checkIn) {
@@ -416,12 +394,10 @@ export const BookingWidget = ({
         taxes: 150,
         total: 0,
         isValidDates: false,
-      };
+      }
     }
 
-    const nights = Math.floor(
-      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const nights = Math.floor((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
 
     if (nights < minNights || nights > maxNights) {
       return {
@@ -430,13 +406,13 @@ export const BookingWidget = ({
         taxes: 150,
         total: 0,
         isValidDates: false,
-      };
+      }
     }
 
-    const isValidDateRange = validateDates(checkIn, checkOut);
-    const subtotal = nights * pricePerNight;
-    const taxes = 150;
-    const total = subtotal + taxes;
+    const isValidDateRange = validateDates(checkIn, checkOut)
+    const subtotal = nights * pricePerNight
+    const taxes = 150
+    const total = subtotal + taxes
 
     return {
       nights,
@@ -444,8 +420,8 @@ export const BookingWidget = ({
       taxes,
       total,
       isValidDates: isValidDateRange,
-    };
-  }, [checkIn, checkOut, pricePerNight, minNights, maxNights, validateDates]);
+    }
+  }, [checkIn, checkOut, pricePerNight, minNights, maxNights, validateDates])
 
   // ✅ useEffect PARA ACTUALIZAR isValidBooking
   useEffect(() => {
@@ -454,213 +430,197 @@ export const BookingWidget = ({
       Object.keys(dateErrors).length === 0 &&
       checkIn &&
       checkOut &&
-      bookingCalculations.nights > 0;
+      bookingCalculations.nights > 0
 
-    setIsValidBooking(isValid ?? false);
-  }, [
-    bookingCalculations.isValidDates,
-    dateErrors,
-    checkIn,
-    checkOut,
-    bookingCalculations.nights,
-  ]);
+    setIsValidBooking(isValid ?? false)
+  }, [bookingCalculations.isValidDates, dateErrors, checkIn, checkOut, bookingCalculations.nights])
 
   // ✅ MANEJAR SELECCIÓN DE FECHAS EN EL CALENDARIO
   const handleCheckInSelect = useCallback(
     (date: Date | undefined) => {
-      setCheckIn(date);
+      setCheckIn(date)
       // Si la fecha de checkout es anterior o igual, limpiarla
       if (checkOut && date && checkOut <= date) {
-        setCheckOut(undefined);
+        setCheckOut(undefined)
       }
-      setShowCheckInCalendar(false);
+      setShowCheckInCalendar(false)
 
       if (date) {
-        validateDates(date, checkOut);
+        validateDates(date, checkOut)
       }
     },
-    [checkOut, validateDates]
-  );
+    [checkOut, validateDates],
+  )
 
   const handleCheckOutSelect = useCallback(
     (date: Date | undefined) => {
-      setCheckOut(date);
-      setShowCheckOutCalendar(false);
+      setCheckOut(date)
+      setShowCheckOutCalendar(false)
 
       if (checkIn && date) {
-        validateDates(checkIn, date);
+        validateDates(checkIn, date)
       }
     },
-    [checkIn, validateDates]
-  );
+    [checkIn, validateDates],
+  )
 
   // ✅ FUNCIONES AUXILIARES
   const generateBookingId = useCallback(() => {
-    return `HTL${Date.now().toString().slice(-8)}${Math.random()
-      .toString(36)
-      .substr(2, 4)
-      .toUpperCase()}`;
-  }, []);
+    return `HTL${Date.now().toString().slice(-8)}${Math.random().toString(36).substr(2, 4).toUpperCase()}`
+  }, [])
 
   const formatDate = useCallback((date: Date | undefined) => {
-    if (!date) return "";
-    return format(date, "dd 'de' MMMM, yyyy", { locale: es });
-  }, []);
+    if (!date) return ""
+    return format(date, "dd 'de' MMMM, yyyy", { locale: es })
+  }, [])
 
   const formatDateShort = useCallback((date: Date | undefined) => {
-    if (!date) return "";
-    return format(date, "dd/MM/yyyy");
-  }, []);
+    if (!date) return ""
+    return format(date, "dd/MM/yyyy")
+  }, [])
 
   const copyToClipboard = useCallback((text: string) => {
-    navigator.clipboard.writeText(text);
-  }, []);
+    navigator.clipboard.writeText(text)
+  }, [])
 
   // ✅ HANDLE SUBMIT CON VALIDACIÓN CRÍTICA
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
-      e.preventDefault();
+      e.preventDefault()
 
       if (!isValidBooking) {
-        console.log("❌ Reserva bloqueada - Datos inválidos");
-        return;
+        console.log("❌ Reserva bloqueada - Datos inválidos")
+        return
       }
 
-      console.log("✅ Reserva válida, continuando...");
-      setShowPaymentModal(true);
-      setPaymentStep("method");
+      console.log("✅ Reserva válida, continuando...")
+      setShowPaymentModal(true)
+      setPaymentStep("method")
     },
-    [isValidBooking]
-  );
+    [isValidBooking],
+  )
 
   const handlePaymentMethodSelect = useCallback((methodId: string) => {
-    setSelectedPaymentMethod(methodId);
+    setSelectedPaymentMethod(methodId)
     if (methodId === "efectivo") {
-      setPaymentStep("guest");
+      setPaymentStep("guest")
     } else {
-      setPaymentStep("details");
+      setPaymentStep("details")
     }
-  }, []);
+  }, [])
 
   // ✅ VALIDACIÓN DE DETALLES DE PAGO COMPLETA
   const validatePaymentDetails = useCallback(() => {
-    const newErrors: { [key: string]: string } = {};
+    const newErrors: { [key: string]: string } = {}
 
     switch (selectedPaymentMethod) {
       case "tarjeta":
         if (!paymentDetails.cardNumber.trim()) {
-          newErrors.cardNumber = "Número de tarjeta requerido";
+          newErrors.cardNumber = "Número de tarjeta requerido"
         } else if (paymentDetails.cardNumber.replace(/\s/g, "").length < 16) {
-          newErrors.cardNumber = "Número de tarjeta inválido";
+          newErrors.cardNumber = "Número de tarjeta inválido"
         }
         if (!paymentDetails.expiryDate.trim()) {
-          newErrors.expiryDate = "Fecha de vencimiento requerida";
+          newErrors.expiryDate = "Fecha de vencimiento requerida"
         } else if (!/^\d{2}\/\d{2}$/.test(paymentDetails.expiryDate)) {
-          newErrors.expiryDate = "Formato inválido (MM/AA)";
+          newErrors.expiryDate = "Formato inválido (MM/AA)"
         }
         if (!paymentDetails.cvv.trim()) {
-          newErrors.cvv = "CVV requerido";
+          newErrors.cvv = "CVV requerido"
         } else if (paymentDetails.cvv.length < 3) {
-          newErrors.cvv = "CVV inválido";
+          newErrors.cvv = "CVV inválido"
         }
         if (!paymentDetails.cardName.trim()) {
-          newErrors.cardName = "Nombre en la tarjeta requerido";
+          newErrors.cardName = "Nombre en la tarjeta requerido"
         }
-        break;
+        break
 
       case "transferencia":
         if (!paymentDetails.transferenceReference.trim()) {
-          newErrors.transferenceReference =
-            "Referencia de transferencia requerida";
+          newErrors.transferenceReference = "Referencia de transferencia requerida"
         } else if (paymentDetails.transferenceReference.length < 6) {
-          newErrors.transferenceReference =
-            "Referencia debe tener al menos 6 caracteres";
+          newErrors.transferenceReference = "Referencia debe tener al menos 6 caracteres"
         }
-        break;
+        break
 
       case "pago-movil":
         if (!paymentDetails.pagoMovilPhone.trim()) {
-          newErrors.pagoMovilPhone = "Teléfono requerido";
-        } else if (
-          !/^(0414|0424|0412|0416|0426)\d{7}$/.test(
-            paymentDetails.pagoMovilPhone.replace(/[-\s]/g, "")
-          )
-        ) {
-          newErrors.pagoMovilPhone = "Formato de teléfono inválido";
+          newErrors.pagoMovilPhone = "Teléfono requerido"
+        } else if (!/^(0414|0424|0412|0416|0426)\d{7}$/.test(paymentDetails.pagoMovilPhone.replace(/[-\s]/g, ""))) {
+          newErrors.pagoMovilPhone = "Formato de teléfono inválido"
         }
         if (!paymentDetails.pagoMovilReference.trim()) {
-          newErrors.pagoMovilReference = "Referencia requerida";
+          newErrors.pagoMovilReference = "Referencia requerida"
         } else if (paymentDetails.pagoMovilReference.length < 6) {
-          newErrors.pagoMovilReference =
-            "Referencia debe tener al menos 6 caracteres";
+          newErrors.pagoMovilReference = "Referencia debe tener al menos 6 caracteres"
         }
-        break;
+        break
 
       case "crypto":
         if (!paymentDetails.cryptoWallet.trim()) {
-          newErrors.cryptoWallet = "Dirección de wallet requerida";
+          newErrors.cryptoWallet = "Dirección de wallet requerida"
         } else if (paymentDetails.cryptoWallet.length < 26) {
-          newErrors.cryptoWallet = "Dirección de wallet inválida";
+          newErrors.cryptoWallet = "Dirección de wallet inválida"
         }
         if (!paymentDetails.cryptoTxHash.trim()) {
-          newErrors.cryptoTxHash = "Hash de transacción requerido";
+          newErrors.cryptoTxHash = "Hash de transacción requerido"
         }
-        break;
+        break
 
       case "zelle":
         if (!paymentDetails.zelleEmail.trim()) {
-          newErrors.zelleEmail = "Email de Zelle requerido";
+          newErrors.zelleEmail = "Email de Zelle requerido"
         } else if (!/\S+@\S+\.\S+/.test(paymentDetails.zelleEmail)) {
-          newErrors.zelleEmail = "Email inválido";
+          newErrors.zelleEmail = "Email inválido"
         }
         if (!paymentDetails.zelleReference.trim()) {
-          newErrors.zelleReference = "Referencia de Zelle requerida";
+          newErrors.zelleReference = "Referencia de Zelle requerida"
         }
-        break;
+        break
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [selectedPaymentMethod, paymentDetails]);
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }, [selectedPaymentMethod, paymentDetails])
 
   const validateGuestInfo = useCallback(() => {
-    const newErrors: { [key: string]: string } = {};
+    const newErrors: { [key: string]: string } = {}
 
     if (!guestInfo.name.trim()) {
-      newErrors.name = "El nombre es requerido";
+      newErrors.name = "El nombre es requerido"
     }
     if (!guestInfo.email.trim()) {
-      newErrors.email = "El email es requerido";
+      newErrors.email = "El email es requerido"
     } else if (!/\S+@\S+\.\S+/.test(guestInfo.email)) {
-      newErrors.email = "Email inválido";
+      newErrors.email = "Email inválido"
     }
     if (!guestInfo.phone.trim()) {
-      newErrors.phone = "El teléfono es requerido";
+      newErrors.phone = "El teléfono es requerido"
     }
     if (!guestInfo.document.trim()) {
-      newErrors.document = "El documento es requerido";
+      newErrors.document = "El documento es requerido"
     }
     if (!termsAccepted) {
-      newErrors.terms = "Debes aceptar los términos y condiciones";
+      newErrors.terms = "Debes aceptar los términos y condiciones"
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [guestInfo, termsAccepted]);
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }, [guestInfo, termsAccepted])
 
   // ✅ ACTUALIZAR handlePaymentComplete
   const handlePaymentComplete = useCallback(() => {
     if (paymentStep === "details" && validatePaymentDetails()) {
-      setPaymentStep("guest");
+      setPaymentStep("guest")
     } else if (paymentStep === "guest" && validateGuestInfo()) {
-      const newBookingId = generateBookingId();
-      setBookingId(newBookingId);
+      const newBookingId = generateBookingId()
+      setBookingId(newBookingId)
 
       const bookingData: BookingData = {
         id: newBookingId,
         checkIn: checkIn ? format(checkIn, "yyyy-MM-dd") : "",
         checkOut: checkOut ? format(checkOut, "yyyy-MM-dd") : "",
-        guests: parseInt(guests),
+        guests: Number.parseInt(guests),
         nights: bookingCalculations.nights,
         pricePerNight,
         subtotal: bookingCalculations.subtotal,
@@ -673,10 +633,10 @@ export const BookingWidget = ({
         paymentMethod: selectedPaymentMethod,
         paymentDetails,
         guestInfo,
-      };
+      }
 
-      onBooking(bookingData);
-      setPaymentStep("success");
+      onBooking(bookingData)
+      setPaymentStep("success")
     }
   }, [
     paymentStep,
@@ -692,14 +652,13 @@ export const BookingWidget = ({
     paymentDetails,
     guestInfo,
     onBooking,
-  ]);
-
+  ])
 
   const resetBooking = useCallback(() => {
-    setCheckIn(undefined);
-    setCheckOut(undefined);
-    setGuests("2");
-    setGuestInfo({ name: "", email: "", phone: "", document: "", notes: "" });
+    setCheckIn(undefined)
+    setCheckOut(undefined)
+    setGuests("2")
+    setGuestInfo({ name: "", email: "", phone: "", document: "", notes: "" })
     setPaymentDetails({
       cardNumber: "",
       expiryDate: "",
@@ -712,37 +671,37 @@ export const BookingWidget = ({
       cryptoTxHash: "",
       zelleEmail: "",
       zelleReference: "",
-    });
-    setShowPaymentModal(false);
-    setPaymentStep("method");
-    setSelectedPaymentMethod("");
-    setErrors({});
-    setDateErrors({});
-    setBookingId("");
-    setTermsAccepted(false);
-    setIsValidBooking(false);
-  }, []);
+    })
+    setShowPaymentModal(false)
+    setPaymentStep("method")
+    setSelectedPaymentMethod("")
+    setErrors({})
+    setDateErrors({})
+    setBookingId("")
+    setTermsAccepted(false)
+    setIsValidBooking(false)
+  }, [])
 
   const closePaymentModal = useCallback(() => {
     if (paymentStep === "success") {
-      resetBooking();
+      resetBooking()
     } else {
-      setShowPaymentModal(false);
-      setPaymentStep("method");
-      setSelectedPaymentMethod("");
-      setErrors({});
+      setShowPaymentModal(false)
+      setPaymentStep("method")
+      setSelectedPaymentMethod("")
+      setErrors({})
     }
-  }, [paymentStep, resetBooking]);
+  }, [paymentStep, resetBooking])
 
   const handleMobileBookingClick = useCallback(() => {
-    const modal = document.getElementById("mobile-booking-modal");
-    if (modal) modal.classList.remove("hidden");
-  }, []);
+    const modal = document.getElementById("mobile-booking-modal")
+    if (modal) modal.classList.remove("hidden")
+  }, [])
 
   const closeMobileModal = useCallback(() => {
-    const modal = document.getElementById("mobile-booking-modal");
-    if (modal) modal.classList.add("hidden");
-  }, []);
+    const modal = document.getElementById("mobile-booking-modal")
+    if (modal) modal.classList.add("hidden")
+  }, [])
 
   // ✅ RENDERIZAR LEYENDA LATERAL DEL CALENDARIO CON PRÓXIMAS RESERVAS ABAJO
   const renderCalendarLegend = useCallback(
@@ -778,25 +737,17 @@ export const BookingWidget = ({
           {(() => {
             const upcomingReservations = reservedPeriods
               .filter((period) => new Date(period.end) >= today)
-              .sort(
-                (a, b) =>
-                  new Date(a.start).getTime() - new Date(b.start).getTime()
-              )
-              .slice(0, 3);
+              .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+              .slice(0, 3)
 
-            if (upcomingReservations.length === 0) return null;
+            if (upcomingReservations.length === 0) return null
 
             return (
               <div className="border-t border-gray-200 pt-4">
-                <h5 className="text-sm font-semibold text-gray-700 mb-3">
-                  Próximas Reservas:
-                </h5>
+                <h5 className="text-sm font-semibold text-gray-700 mb-3">Próximas Reservas:</h5>
                 <div className="space-y-3 max-h-32 overflow-y-auto">
                   {upcomingReservations.map((reservation, index) => (
-                    <div
-                      key={index}
-                      className="text-xs p-2 bg-white rounded border border-gray-200"
-                    >
+                    <div key={index} className="text-xs p-2 bg-white rounded border border-gray-200">
                       <div className="font-medium text-gray-800 mb-1">
                         {format(new Date(reservation.start), "dd/MM", {
                           locale: es,
@@ -807,9 +758,7 @@ export const BookingWidget = ({
                         })}
                       </div>
                       {reservation.guestName && (
-                        <div className="text-gray-600 truncate mb-1">
-                          {reservation.guestName}
-                        </div>
+                        <div className="text-gray-600 truncate mb-1">{reservation.guestName}</div>
                       )}
                       <Badge
                         variant="secondary"
@@ -817,30 +766,30 @@ export const BookingWidget = ({
                           reservation.status === "confirmed"
                             ? "bg-red-100 text-red-700"
                             : reservation.status === "pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-blue-100 text-blue-700"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-blue-100 text-blue-700"
                         }`}
                       >
                         {reservation.status === "confirmed"
                           ? "Confirmado"
                           : reservation.status === "pending"
-                          ? "Pendiente"
-                          : "Check-out"}
+                            ? "Pendiente"
+                            : "Check-out"}
                       </Badge>
                     </div>
                   ))}
                 </div>
               </div>
-            );
+            )
           })()}
         </div>
       </div>
     ),
-    [reservedPeriods]
-  );
+    [reservedPeriods],
+  )
 
   // ✅ OBTENER MODIFICADORES DEL CALENDARIO
-  const { modifiers, modifiersClassNames } = getDateModifiers();
+  const { modifiers, modifiersClassNames } = getDateModifiers()
 
   // ✅ DEBUG LOG
   useEffect(() => {
@@ -851,8 +800,8 @@ export const BookingWidget = ({
       isValidDates: bookingCalculations.isValidDates,
       dateErrors,
       isValidBooking,
-    });
-  }, [checkIn, checkOut, bookingCalculations, dateErrors, isValidBooking]);
+    })
+  }, [checkIn, checkOut, bookingCalculations, dateErrors, isValidBooking])
 
   return (
     <>
@@ -860,30 +809,23 @@ export const BookingWidget = ({
       <Card className="hidden lg:block shadow-2xl sticky top-28 border-t-4 border-red-600 bg-white/95 backdrop-blur-sm">
         <CardContent className="p-6">
           <div className="flex justify-between items-baseline mb-4">
-            <span className="text-4xl font-bold text-red-600">
-              ${pricePerNight}
-            </span>
+            <span className="text-4xl font-bold text-red-600">${pricePerNight}</span>
             <span className="text-lg text-gray-600">/ noche</span>
           </div>
-          <p className="text-gray-600 text-sm mb-6">
-            Precio promedio por noche, impuestos y tasas no incluidos.
-          </p>
+          <p className="text-gray-600 text-sm mb-6">Precio promedio por noche, impuestos y tasas no incluidos.</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* ✅ CALENDARIO DE CHECK-IN CON LEYENDA LATERAL */}
             <div>
               <Label>Fecha de Check-in</Label>
-              <Popover
-                open={showCheckInCalendar}
-                onOpenChange={setShowCheckInCalendar}
-              >
+              <Popover open={showCheckInCalendar} onOpenChange={setShowCheckInCalendar}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !checkIn && "text-muted-foreground",
-                      dateErrors.checkIn && "border-red-500"
+                      dateErrors.checkIn && "border-red-500",
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -918,17 +860,14 @@ export const BookingWidget = ({
             {/* ✅ CALENDARIO DE CHECK-OUT CON LEYENDA LATERAL */}
             <div>
               <Label>Fecha de Check-out</Label>
-              <Popover
-                open={showCheckOutCalendar}
-                onOpenChange={setShowCheckOutCalendar}
-              >
+              <Popover open={showCheckOutCalendar} onOpenChange={setShowCheckOutCalendar}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !checkOut && "text-muted-foreground",
-                      dateErrors.checkOut && "border-red-500"
+                      dateErrors.checkOut && "border-red-500",
                     )}
                     disabled={!checkIn}
                   >
@@ -943,9 +882,9 @@ export const BookingWidget = ({
                       selected={checkOut}
                       onSelect={handleCheckOutSelect}
                       disabled={(date: Date) => {
-                        if (!checkIn) return true;
-                        if (date <= checkIn) return true;
-                        return isDateDisabled(date);
+                        if (!checkIn) return true
+                        if (date <= checkIn) return true
+                        return isDateDisabled(date)
                       }}
                       modifiers={modifiers}
                       modifiersClassNames={modifiersClassNames}
@@ -972,13 +911,11 @@ export const BookingWidget = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: maxGuests }, (_, i) => i + 1).map(
-                    (num) => (
-                      <SelectItem key={num} value={num.toString()}>
-                        {num} {num === 1 ? "Huésped" : "Huéspedes"}
-                      </SelectItem>
-                    )
-                  )}
+                  {Array.from({ length: maxGuests }, (_, i) => i + 1).map((num) => (
+                    <SelectItem key={num} value={num.toString()}>
+                      {num} {num === 1 ? "Huésped" : "Huéspedes"}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -987,8 +924,7 @@ export const BookingWidget = ({
               <div className="border-t border-gray-200 pt-4 mt-4">
                 <div className="flex justify-between text-gray-700 mb-2">
                   <span>
-                    {bookingCalculations.nights}{" "}
-                    {bookingCalculations.nights === 1 ? "Noche" : "Noches"} x $
+                    {bookingCalculations.nights} {bookingCalculations.nights === 1 ? "Noche" : "Noches"} x $
                     {pricePerNight}
                   </span>
                   <span>${bookingCalculations.subtotal}</span>
@@ -1012,13 +948,12 @@ export const BookingWidget = ({
               {isValidBooking
                 ? "Reservar Ahora"
                 : Object.keys(dateErrors).length > 0
-                ? "Fechas no disponibles"
-                : bookingCalculations.nights > 0 &&
-                  bookingCalculations.nights < minNights
-                ? `Mínimo ${minNights} ${minNights === 1 ? "noche" : "noches"}`
-                : bookingCalculations.nights > maxNights
-                ? `Máximo ${maxNights} noches`
-                : "Selecciona las fechas"}
+                  ? "Fechas no disponibles"
+                  : bookingCalculations.nights > 0 && bookingCalculations.nights < minNights
+                    ? `Mínimo ${minNights} ${minNights === 1 ? "noche" : "noches"}`
+                    : bookingCalculations.nights > maxNights
+                      ? `Máximo ${maxNights} noches`
+                      : "Selecciona las fechas"}
             </Button>
           </form>
         </CardContent>
@@ -1028,45 +963,31 @@ export const BookingWidget = ({
       <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white border-t shadow-2xl z-40 p-4">
         <div className="flex items-center justify-between">
           <div>
-            <span className="text-2xl font-bold text-red-600">
-              ${pricePerNight}
-            </span>
+            <span className="text-2xl font-bold text-red-600">${pricePerNight}</span>
             <span className="text-gray-600 ml-1">/ noche</span>
           </div>
-          <Button
-            onClick={handleMobileBookingClick}
-            className="bg-red-600 hover:bg-red-700 text-white px-6"
-          >
+          <Button onClick={handleMobileBookingClick} className="bg-red-600 hover:bg-red-700 text-white px-6">
             Reservar
           </Button>
         </div>
       </div>
 
       {/* Modal de reserva para móvil */}
-      <div
-        id="mobile-booking-modal"
-        className="hidden fixed inset-0 z-50 lg:hidden"
-      >
-        <div
-          className="absolute inset-0 bg-black/60"
-          onClick={closeMobileModal}
-        />
+      <div id="mobile-booking-modal" className="hidden fixed inset-0 z-50 lg:hidden">
+        <div className="absolute inset-0 bg-black/60" onClick={closeMobileModal} />
         <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-xl p-6 max-h-[80vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-bold">Detalles de Reserva</h3>
-            <button
-              onClick={closeMobileModal}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
-            >
+            <button onClick={closeMobileModal} className="text-gray-500 hover:text-gray-700 text-2xl">
               ×
             </button>
           </div>
 
           <form
             onSubmit={(e) => {
-              handleSubmit(e);
+              handleSubmit(e)
               if (isValidBooking) {
-                closeMobileModal();
+                closeMobileModal()
               }
             }}
             className="space-y-4"
@@ -1081,7 +1002,7 @@ export const BookingWidget = ({
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !checkIn && "text-muted-foreground",
-                      dateErrors.checkIn && "border-red-500"
+                      dateErrors.checkIn && "border-red-500",
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -1102,9 +1023,7 @@ export const BookingWidget = ({
                     />
                     {/* LEYENDA PRIMERO EN MÓVIL */}
                     <div className="p-3 bg-gray-50 border-t">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                        Leyenda:
-                      </h4>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Leyenda:</h4>
                       <div className="grid grid-cols-2 gap-2 text-xs mb-4">
                         <div className="flex items-center space-x-2">
                           <div className="w-4 h-4 bg-red-500 rounded"></div>
@@ -1128,69 +1047,47 @@ export const BookingWidget = ({
                       {(() => {
                         const upcomingReservations = reservedPeriods
                           .filter((period) => new Date(period.end) >= today)
-                          .sort(
-                            (a, b) =>
-                              new Date(a.start).getTime() -
-                              new Date(b.start).getTime()
-                          )
-                          .slice(0, 2);
+                          .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+                          .slice(0, 2)
 
-                        if (upcomingReservations.length === 0) return null;
+                        if (upcomingReservations.length === 0) return null
 
                         return (
                           <div className="border-t border-gray-200 pt-3">
-                            <h5 className="text-sm font-semibold text-gray-700 mb-2">
-                              Próximas Reservas:
-                            </h5>
+                            <h5 className="text-sm font-semibold text-gray-700 mb-2">Próximas Reservas:</h5>
                             <div className="space-y-2 max-h-24 overflow-y-auto">
-                              {upcomingReservations.map(
-                                (reservation, index) => (
-                                  <div
-                                    key={index}
-                                    className="text-xs p-2 bg-white rounded border border-gray-200"
-                                  >
-                                    <div className="font-medium text-gray-800">
-                                      {format(
-                                        new Date(reservation.start),
-                                        "dd/MM",
-                                        { locale: es }
-                                      )}{" "}
-                                      -{" "}
-                                      {format(
-                                        new Date(reservation.end),
-                                        "dd/MM",
-                                        { locale: es }
-                                      )}
-                                    </div>
-                                    {reservation.guestName && (
-                                      <div className="text-gray-500 truncate">
-                                        {reservation.guestName}
-                                      </div>
-                                    )}
-                                    <div className="flex items-center space-x-1 mt-1">
-                                      <div
-                                        className={`w-2 h-2 rounded-full ${
-                                          reservation.status === "confirmed"
-                                            ? "bg-red-500"
-                                            : reservation.status === "pending"
+                              {upcomingReservations.map((reservation, index) => (
+                                <div key={index} className="text-xs p-2 bg-white rounded border border-gray-200">
+                                  <div className="font-medium text-gray-800">
+                                    {format(new Date(reservation.start), "dd/MM", { locale: es })} -{" "}
+                                    {format(new Date(reservation.end), "dd/MM", { locale: es })}
+                                  </div>
+                                  {reservation.guestName && (
+                                    <div className="text-gray-500 truncate">{reservation.guestName}</div>
+                                  )}
+                                  <div className="flex items-center space-x-1 mt-1">
+                                    <div
+                                      className={`w-2 h-2 rounded-full ${
+                                        reservation.status === "confirmed"
+                                          ? "bg-red-500"
+                                          : reservation.status === "pending"
                                             ? "bg-yellow-400"
                                             : "bg-blue-400"
-                                        }`}
-                                      ></div>
-                                      <span className="text-gray-400 capitalize">
-                                        {reservation.status === "confirmed"
-                                          ? "Confirmada"
-                                          : reservation.status === "pending"
+                                      }`}
+                                    ></div>
+                                    <span className="text-gray-400 capitalize">
+                                      {reservation.status === "confirmed"
+                                        ? "Confirmada"
+                                        : reservation.status === "pending"
                                           ? "Pendiente"
                                           : "Check-out"}
-                                      </span>
-                                    </div>
+                                    </span>
                                   </div>
-                                )
-                              )}
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        );
+                        )
                       })()}
                     </div>
                   </div>
@@ -1214,7 +1111,7 @@ export const BookingWidget = ({
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !checkOut && "text-muted-foreground",
-                      dateErrors.checkOut && "border-red-500"
+                      dateErrors.checkOut && "border-red-500",
                     )}
                     disabled={!checkIn}
                   >
@@ -1229,9 +1126,9 @@ export const BookingWidget = ({
                       selected={checkOut}
                       onSelect={handleCheckOutSelect}
                       disabled={(date) => {
-                        if (!checkIn) return true;
-                        if (date <= checkIn) return true;
-                        return isDateDisabled(date);
+                        if (!checkIn) return true
+                        if (date <= checkIn) return true
+                        return isDateDisabled(date)
                       }}
                       modifiers={modifiers}
                       modifiersClassNames={modifiersClassNames}
@@ -1240,9 +1137,7 @@ export const BookingWidget = ({
                     />
                     {/* LEYENDA PRIMERO EN MÓVIL */}
                     <div className="p-3 bg-gray-50 border-t">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2">
-                        Leyenda:
-                      </h4>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">Leyenda:</h4>
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <div className="flex items-center space-x-2">
                           <div className="w-4 h-4 bg-red-500 rounded"></div>
@@ -1280,13 +1175,11 @@ export const BookingWidget = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: maxGuests }, (_, i) => i + 1).map(
-                    (num) => (
-                      <SelectItem key={num} value={num.toString()}>
-                        {num} {num === 1 ? "Huésped" : "Huéspedes"}
-                      </SelectItem>
-                    )
-                  )}
+                  {Array.from({ length: maxGuests }, (_, i) => i + 1).map((num) => (
+                    <SelectItem key={num} value={num.toString()}>
+                      {num} {num === 1 ? "Huésped" : "Huéspedes"}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -1295,8 +1188,7 @@ export const BookingWidget = ({
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex justify-between text-gray-700 mb-2">
                   <span>
-                    {bookingCalculations.nights}{" "}
-                    {bookingCalculations.nights === 1 ? "Noche" : "Noches"} x $
+                    {bookingCalculations.nights} {bookingCalculations.nights === 1 ? "Noche" : "Noches"} x $
                     {pricePerNight}
                   </span>
                   <span>${bookingCalculations.subtotal}</span>
@@ -1307,8 +1199,7 @@ export const BookingWidget = ({
                 </div>
                 <div className="flex justify-between font-bold text-xl text-gray-900 border-t pt-3 mt-3">
                   <span>
-                    Total ({bookingCalculations.nights}{" "}
-                    {bookingCalculations.nights === 1 ? "noche" : "noches"})
+                    Total ({bookingCalculations.nights} {bookingCalculations.nights === 1 ? "noche" : "noches"})
                   </span>
                   <span>${bookingCalculations.total}</span>
                 </div>
@@ -1323,8 +1214,8 @@ export const BookingWidget = ({
               {isValidBooking
                 ? "Continuar al Pago"
                 : Object.keys(dateErrors).length > 0
-                ? "Fechas no disponibles"
-                : "Selecciona las fechas"}
+                  ? "Fechas no disponibles"
+                  : "Selecciona las fechas"}
             </Button>
           </form>
         </div>
@@ -1341,13 +1232,9 @@ export const BookingWidget = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      if (paymentStep === "details") setPaymentStep("method");
+                      if (paymentStep === "details") setPaymentStep("method")
                       else if (paymentStep === "guest") {
-                        setPaymentStep(
-                          selectedPaymentMethod === "efectivo"
-                            ? "method"
-                            : "details"
-                        );
+                        setPaymentStep(selectedPaymentMethod === "efectivo" ? "method" : "details")
                       }
                     }}
                   >
@@ -1370,9 +1257,7 @@ export const BookingWidget = ({
               {/* Resumen de la reserva */}
               {paymentStep !== "success" && (
                 <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-4 mb-6 border border-red-100">
-                  <h3 className="font-semibold text-red-800 mb-3">
-                    Resumen de tu Reserva
-                  </h3>
+                  <h3 className="font-semibold text-red-800 mb-3">Resumen de tu Reserva</h3>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2">
@@ -1399,9 +1284,7 @@ export const BookingWidget = ({
                       </span>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-red-600">
-                        ${bookingCalculations.total}
-                      </p>
+                      <p className="text-2xl font-bold text-red-600">${bookingCalculations.total}</p>
                       <p className="text-xs text-gray-500">Total</p>
                     </div>
                   </div>
@@ -1411,9 +1294,7 @@ export const BookingWidget = ({
               {/* ✅ PASO 1: SELECCIÓN DE MÉTODO DE PAGO */}
               {paymentStep === "method" && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Selecciona tu método de pago
-                  </h3>
+                  <h3 className="text-lg font-semibold mb-4">Selecciona tu método de pago</h3>
                   <div className="grid gap-4">
                     {paymentMethods.map((method) => (
                       <button
@@ -1424,33 +1305,24 @@ export const BookingWidget = ({
                           selectedPaymentMethod === method.id
                             ? "border-red-500 bg-red-50"
                             : method.available
-                            ? "border-gray-200 hover:border-gray-300"
-                            : "border-gray-100 bg-gray-50 cursor-not-allowed"
+                              ? "border-gray-200 hover:border-gray-300"
+                              : "border-gray-100 bg-gray-50 cursor-not-allowed"
                         }`}
                       >
                         <div className="flex items-center space-x-4">
-                          <div
-                            className={`${method.color} text-white rounded-full p-3 flex-shrink-0`}
-                          >
+                          <div className={`${method.color} text-white rounded-full p-3 flex-shrink-0`}>
                             {method.icon}
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center space-x-2">
-                              <h4 className="font-semibold text-gray-900">
-                                {method.name}
-                              </h4>
+                              <h4 className="font-semibold text-gray-900">{method.name}</h4>
                               {method.id === "efectivo" && (
-                                <Badge
-                                  variant="secondary"
-                                  className="bg-green-100 text-green-700"
-                                >
+                                <Badge variant="secondary" className="bg-green-100 text-green-700">
                                   Recomendado
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {method.description}
-                            </p>
+                            <p className="text-sm text-gray-600 mt-1">{method.description}</p>
                           </div>
                           {selectedPaymentMethod === method.id && (
                             <CheckCircle className="h-6 w-6 text-red-500 flex-shrink-0" />
@@ -1468,28 +1340,16 @@ export const BookingWidget = ({
                   <div className="flex items-center space-x-3 mb-4">
                     <div
                       className={`${
-                        paymentMethods.find(
-                          (m) => m.id === selectedPaymentMethod
-                        )?.color
+                        paymentMethods.find((m) => m.id === selectedPaymentMethod)?.color
                       } text-white rounded-full p-3`}
                     >
-                      {
-                        paymentMethods.find(
-                          (m) => m.id === selectedPaymentMethod
-                        )?.icon
-                      }
+                      {paymentMethods.find((m) => m.id === selectedPaymentMethod)?.icon}
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold">
-                        {
-                          paymentMethods.find(
-                            (m) => m.id === selectedPaymentMethod
-                          )?.name
-                        }
+                        {paymentMethods.find((m) => m.id === selectedPaymentMethod)?.name}
                       </h3>
-                      <p className="text-sm text-gray-600">
-                        Completa los detalles de tu pago
-                      </p>
+                      <p className="text-sm text-gray-600">Completa los detalles de tu pago</p>
                     </div>
                   </div>
 
@@ -1499,14 +1359,9 @@ export const BookingWidget = ({
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                         <div className="flex items-center space-x-2 mb-2">
                           <Shield className="h-5 w-5 text-blue-600" />
-                          <span className="text-sm font-medium text-blue-800">
-                            Pago Seguro SSL
-                          </span>
+                          <span className="text-sm font-medium text-blue-800">Pago Seguro SSL</span>
                         </div>
-                        <p className="text-xs text-blue-700">
-                          Tus datos están protegidos con encriptación de 256
-                          bits
-                        </p>
+                        <p className="text-xs text-blue-700">Tus datos están protegidos con encriptación de 256 bits</p>
                       </div>
 
                       <div>
@@ -1517,62 +1372,45 @@ export const BookingWidget = ({
                           value={paymentDetails.cardNumber}
                           onChange={(e) => {
                             // Formatear número de tarjeta con espacios
-                            let value = e.target.value
-                              .replace(/\s/g, "")
-                              .replace(/\D/g, "");
-                            value = value.replace(/(\d{4})(?=\d)/g, "$1 ");
+                            let value = e.target.value.replace(/\s/g, "").replace(/\D/g, "")
+                            value = value.replace(/(\d{4})(?=\d)/g, "$1 ")
                             if (value.length <= 19) {
                               // 16 dígitos + 3 espacios
                               setPaymentDetails((prev) => ({
                                 ...prev,
                                 cardNumber: value,
-                              }));
+                              }))
                             }
                           }}
                           className={errors.cardNumber ? "border-red-500" : ""}
                           maxLength={19}
                         />
-                        {errors.cardNumber && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.cardNumber}
-                          </p>
-                        )}
+                        {errors.cardNumber && <p className="text-sm text-red-500 mt-1">{errors.cardNumber}</p>}
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="expiryDate">
-                            Fecha de Vencimiento *
-                          </Label>
+                          <Label htmlFor="expiryDate">Fecha de Vencimiento *</Label>
                           <Input
                             id="expiryDate"
                             placeholder="MM/AA"
                             value={paymentDetails.expiryDate}
                             onChange={(e) => {
-                              let value = e.target.value.replace(/\D/g, "");
+                              let value = e.target.value.replace(/\D/g, "")
                               if (value.length >= 2) {
-                                value =
-                                  value.substring(0, 2) +
-                                  "/" +
-                                  value.substring(2, 4);
+                                value = value.substring(0, 2) + "/" + value.substring(2, 4)
                               }
                               if (value.length <= 5) {
                                 setPaymentDetails((prev) => ({
                                   ...prev,
                                   expiryDate: value,
-                                }));
+                                }))
                               }
                             }}
-                            className={
-                              errors.expiryDate ? "border-red-500" : ""
-                            }
+                            className={errors.expiryDate ? "border-red-500" : ""}
                             maxLength={5}
                           />
-                          {errors.expiryDate && (
-                            <p className="text-sm text-red-500 mt-1">
-                              {errors.expiryDate}
-                            </p>
-                          )}
+                          {errors.expiryDate && <p className="text-sm text-red-500 mt-1">{errors.expiryDate}</p>}
                         </div>
 
                         <div>
@@ -1583,22 +1421,18 @@ export const BookingWidget = ({
                             type="password"
                             value={paymentDetails.cvv}
                             onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, "");
+                              const value = e.target.value.replace(/\D/g, "")
                               if (value.length <= 4) {
                                 setPaymentDetails((prev) => ({
                                   ...prev,
                                   cvv: value,
-                                }));
+                                }))
                               }
                             }}
                             className={errors.cvv ? "border-red-500" : ""}
                             maxLength={4}
                           />
-                          {errors.cvv && (
-                            <p className="text-sm text-red-500 mt-1">
-                              {errors.cvv}
-                            </p>
-                          )}
+                          {errors.cvv && <p className="text-sm text-red-500 mt-1">{errors.cvv}</p>}
                         </div>
                       </div>
 
@@ -1616,11 +1450,7 @@ export const BookingWidget = ({
                           }
                           className={errors.cardName ? "border-red-500" : ""}
                         />
-                        {errors.cardName && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.cardName}
-                          </p>
-                        )}
+                        {errors.cardName && <p className="text-sm text-red-500 mt-1">{errors.cardName}</p>}
                       </div>
                     </div>
                   )}
@@ -1629,9 +1459,7 @@ export const BookingWidget = ({
                   {selectedPaymentMethod === "transferencia" && (
                     <div className="space-y-4">
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <h4 className="font-semibold text-blue-800 mb-2">
-                          Datos Bancarios para Transferencia
-                        </h4>
+                        <h4 className="font-semibold text-blue-800 mb-2">Datos Bancarios para Transferencia</h4>
                         <div className="space-y-2 text-sm text-blue-700">
                           <div className="flex justify-between">
                             <span className="font-medium">Banco:</span>
@@ -1654,10 +1482,10 @@ export const BookingWidget = ({
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="mt-3 w-full"
+                          className="mt-3 w-full bg-transparent"
                           onClick={() => {
-                            copyToClipboard("0102-0123-45-1234567890");
-                            alert("Número de cuenta copiado al portapapeles");
+                            copyToClipboard("0102-0123-45-1234567890")
+                            alert("Número de cuenta copiado al portapapeles")
                           }}
                         >
                           <Copy className="h-4 w-4 mr-2" />
@@ -1666,9 +1494,7 @@ export const BookingWidget = ({
                       </div>
 
                       <div>
-                        <Label htmlFor="transferenceReference">
-                          Número de Referencia *
-                        </Label>
+                        <Label htmlFor="transferenceReference">Número de Referencia *</Label>
                         <Input
                           id="transferenceReference"
                           placeholder="Ej: 123456789"
@@ -1679,18 +1505,12 @@ export const BookingWidget = ({
                               transferenceReference: e.target.value,
                             }))
                           }
-                          className={
-                            errors.transferenceReference ? "border-red-500" : ""
-                          }
+                          className={errors.transferenceReference ? "border-red-500" : ""}
                         />
                         {errors.transferenceReference && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.transferenceReference}
-                          </p>
+                          <p className="text-sm text-red-500 mt-1">{errors.transferenceReference}</p>
                         )}
-                        <p className="text-xs text-gray-500 mt-1">
-                          Número de referencia que aparece en tu comprobante
-                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Número de referencia que aparece en tu comprobante</p>
                       </div>
                     </div>
                   )}
@@ -1699,9 +1519,7 @@ export const BookingWidget = ({
                   {selectedPaymentMethod === "pago-movil" && (
                     <div className="space-y-4">
                       <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                        <h4 className="font-semibold text-purple-800 mb-2">
-                          Datos para Pago Móvil
-                        </h4>
+                        <h4 className="font-semibold text-purple-800 mb-2">Datos para Pago Móvil</h4>
                         <div className="space-y-2 text-sm text-purple-700">
                           <div className="flex justify-between">
                             <span className="font-medium">Banco:</span>
@@ -1720,10 +1538,10 @@ export const BookingWidget = ({
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="mt-3 w-full"
+                          className="mt-3 w-full bg-transparent"
                           onClick={() => {
-                            copyToClipboard("04141234567");
-                            alert("Teléfono copiado al portapapeles");
+                            copyToClipboard("04141234567")
+                            alert("Teléfono copiado al portapapeles")
                           }}
                         >
                           <Copy className="h-4 w-4 mr-2" />
@@ -1738,37 +1556,25 @@ export const BookingWidget = ({
                           placeholder="0414-123-4567"
                           value={paymentDetails.pagoMovilPhone}
                           onChange={(e) => {
-                            let value = e.target.value.replace(/\D/g, "");
+                            let value = e.target.value.replace(/\D/g, "")
                             if (value.length <= 11) {
                               if (value.length >= 4) {
                                 value =
-                                  value.substring(0, 4) +
-                                  "-" +
-                                  value.substring(4, 7) +
-                                  "-" +
-                                  value.substring(7, 11);
+                                  value.substring(0, 4) + "-" + value.substring(4, 7) + "-" + value.substring(7, 11)
                               }
                               setPaymentDetails((prev) => ({
                                 ...prev,
                                 pagoMovilPhone: value,
-                              }));
+                              }))
                             }
                           }}
-                          className={
-                            errors.pagoMovilPhone ? "border-red-500" : ""
-                          }
+                          className={errors.pagoMovilPhone ? "border-red-500" : ""}
                         />
-                        {errors.pagoMovilPhone && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.pagoMovilPhone}
-                          </p>
-                        )}
+                        {errors.pagoMovilPhone && <p className="text-sm text-red-500 mt-1">{errors.pagoMovilPhone}</p>}
                       </div>
 
                       <div>
-                        <Label htmlFor="pagoMovilReference">
-                          Número de Referencia *
-                        </Label>
+                        <Label htmlFor="pagoMovilReference">Número de Referencia *</Label>
                         <Input
                           id="pagoMovilReference"
                           placeholder="Ej: 123456789"
@@ -1779,18 +1585,12 @@ export const BookingWidget = ({
                               pagoMovilReference: e.target.value,
                             }))
                           }
-                          className={
-                            errors.pagoMovilReference ? "border-red-500" : ""
-                          }
+                          className={errors.pagoMovilReference ? "border-red-500" : ""}
                         />
                         {errors.pagoMovilReference && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.pagoMovilReference}
-                          </p>
+                          <p className="text-sm text-red-500 mt-1">{errors.pagoMovilReference}</p>
                         )}
-                        <p className="text-xs text-gray-500 mt-1">
-                          Número de referencia del pago móvil
-                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Número de referencia del pago móvil</p>
                       </div>
                     </div>
                   )}
@@ -1799,24 +1599,18 @@ export const BookingWidget = ({
                   {selectedPaymentMethod === "crypto" && (
                     <div className="space-y-4">
                       <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                        <h4 className="font-semibold text-yellow-800 mb-2">
-                          Direcciones de Wallets
-                        </h4>
+                        <h4 className="font-semibold text-yellow-800 mb-2">Direcciones de Wallets</h4>
                         <div className="space-y-3 text-sm text-yellow-700">
                           <div>
                             <div className="flex justify-between items-center mb-1">
-                              <span className="font-medium">
-                                Bitcoin (BTC):
-                              </span>
+                              <span className="font-medium">Bitcoin (BTC):</span>
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => {
-                                  copyToClipboard(
-                                    "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
-                                  );
-                                  alert("Dirección Bitcoin copiada");
+                                  copyToClipboard("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa")
+                                  alert("Dirección Bitcoin copiada")
                                 }}
                               >
                                 <Copy className="h-3 w-3" />
@@ -1835,10 +1629,8 @@ export const BookingWidget = ({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => {
-                                  copyToClipboard(
-                                    "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE"
-                                  );
-                                  alert("Dirección USDT copiada");
+                                  copyToClipboard("TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE")
+                                  alert("Dirección USDT copiada")
                                 }}
                               >
                                 <Copy className="h-3 w-3" />
@@ -1851,18 +1643,14 @@ export const BookingWidget = ({
 
                           <div>
                             <div className="flex justify-between items-center mb-1">
-                              <span className="font-medium">
-                                Ethereum (ETH):
-                              </span>
+                              <span className="font-medium">Ethereum (ETH):</span>
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => {
-                                  copyToClipboard(
-                                    "0x742d35Cc6634C0532925a3b8D4020a2fDf0e9f"
-                                  );
-                                  alert("Dirección Ethereum copiada");
+                                  copyToClipboard("0x742d35Cc6634C0532925a3b8D4020a2fDf0e9f")
+                                  alert("Dirección Ethereum copiada")
                                 }}
                               >
                                 <Copy className="h-3 w-3" />
@@ -1876,9 +1664,7 @@ export const BookingWidget = ({
                       </div>
 
                       <div>
-                        <Label htmlFor="cryptoWallet">
-                          Tu Dirección de Wallet *
-                        </Label>
+                        <Label htmlFor="cryptoWallet">Tu Dirección de Wallet *</Label>
                         <Input
                           id="cryptoWallet"
                           placeholder="Dirección de tu wallet desde donde enviaste"
@@ -1889,21 +1675,13 @@ export const BookingWidget = ({
                               cryptoWallet: e.target.value,
                             }))
                           }
-                          className={
-                            errors.cryptoWallet ? "border-red-500" : ""
-                          }
+                          className={errors.cryptoWallet ? "border-red-500" : ""}
                         />
-                        {errors.cryptoWallet && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.cryptoWallet}
-                          </p>
-                        )}
+                        {errors.cryptoWallet && <p className="text-sm text-red-500 mt-1">{errors.cryptoWallet}</p>}
                       </div>
 
                       <div>
-                        <Label htmlFor="cryptoTxHash">
-                          Hash de Transacción *
-                        </Label>
+                        <Label htmlFor="cryptoTxHash">Hash de Transacción *</Label>
                         <Input
                           id="cryptoTxHash"
                           placeholder="Hash de la transacción enviada"
@@ -1914,18 +1692,10 @@ export const BookingWidget = ({
                               cryptoTxHash: e.target.value,
                             }))
                           }
-                          className={
-                            errors.cryptoTxHash ? "border-red-500" : ""
-                          }
+                          className={errors.cryptoTxHash ? "border-red-500" : ""}
                         />
-                        {errors.cryptoTxHash && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.cryptoTxHash}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-1">
-                          ID de transacción que aparece en tu wallet
-                        </p>
+                        {errors.cryptoTxHash && <p className="text-sm text-red-500 mt-1">{errors.cryptoTxHash}</p>}
+                        <p className="text-xs text-gray-500 mt-1">ID de transacción que aparece en tu wallet</p>
                       </div>
                     </div>
                   )}
@@ -1934,9 +1704,7 @@ export const BookingWidget = ({
                   {selectedPaymentMethod === "zelle" && (
                     <div className="space-y-4">
                       <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-                        <h4 className="font-semibold text-indigo-800 mb-2">
-                          Datos para Zelle
-                        </h4>
+                        <h4 className="font-semibold text-indigo-800 mb-2">Datos para Zelle</h4>
                         <div className="space-y-2 text-sm text-indigo-700">
                           <div className="flex justify-between">
                             <span className="font-medium">Email:</span>
@@ -1951,10 +1719,10 @@ export const BookingWidget = ({
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="mt-3 w-full"
+                          className="mt-3 w-full bg-transparent"
                           onClick={() => {
-                            copyToClipboard("pagos@hotelparadise.com");
-                            alert("Email de Zelle copiado al portapapeles");
+                            copyToClipboard("pagos@hotelparadise.com")
+                            alert("Email de Zelle copiado al portapapeles")
                           }}
                         >
                           <Copy className="h-4 w-4 mr-2" />
@@ -1977,17 +1745,11 @@ export const BookingWidget = ({
                           }
                           className={errors.zelleEmail ? "border-red-500" : ""}
                         />
-                        {errors.zelleEmail && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.zelleEmail}
-                          </p>
-                        )}
+                        {errors.zelleEmail && <p className="text-sm text-red-500 mt-1">{errors.zelleEmail}</p>}
                       </div>
 
                       <div>
-                        <Label htmlFor="zelleReference">
-                          Número de Confirmación *
-                        </Label>
+                        <Label htmlFor="zelleReference">Número de Confirmación *</Label>
                         <Input
                           id="zelleReference"
                           placeholder="Número de confirmación de Zelle"
@@ -1998,18 +1760,10 @@ export const BookingWidget = ({
                               zelleReference: e.target.value,
                             }))
                           }
-                          className={
-                            errors.zelleReference ? "border-red-500" : ""
-                          }
+                          className={errors.zelleReference ? "border-red-500" : ""}
                         />
-                        {errors.zelleReference && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.zelleReference}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-1">
-                          Número que aparece en tu confirmación de Zelle
-                        </p>
+                        {errors.zelleReference && <p className="text-sm text-red-500 mt-1">{errors.zelleReference}</p>}
+                        <p className="text-xs text-gray-500 mt-1">Número que aparece en tu confirmación de Zelle</p>
                       </div>
                     </div>
                   )}
@@ -2031,12 +1785,8 @@ export const BookingWidget = ({
                       <Users className="h-6 w-6" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold">
-                        Información del Huésped Principal
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Datos necesarios para la reserva
-                      </p>
+                      <h3 className="text-lg font-semibold">Información del Huésped Principal</h3>
+                      <p className="text-sm text-gray-600">Datos necesarios para la reserva</p>
                     </div>
                   </div>
 
@@ -2055,11 +1805,7 @@ export const BookingWidget = ({
                         }
                         className={errors.name ? "border-red-500" : ""}
                       />
-                      {errors.name && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.name}
-                        </p>
-                      )}
+                      {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
                     </div>
 
                     <div>
@@ -2077,11 +1823,7 @@ export const BookingWidget = ({
                         }
                         className={errors.email ? "border-red-500" : ""}
                       />
-                      {errors.email && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.email}
-                        </p>
-                      )}
+                      {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
                     </div>
 
                     <div>
@@ -2098,17 +1840,11 @@ export const BookingWidget = ({
                         }
                         className={errors.phone ? "border-red-500" : ""}
                       />
-                      {errors.phone && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.phone}
-                        </p>
-                      )}
+                      {errors.phone && <p className="text-sm text-red-500 mt-1">{errors.phone}</p>}
                     </div>
 
                     <div>
-                      <Label htmlFor="guestDocument">
-                        Documento de Identidad *
-                      </Label>
+                      <Label htmlFor="guestDocument">Documento de Identidad *</Label>
                       <Input
                         id="guestDocument"
                         placeholder="Ej: V-12345678 o E-12345678"
@@ -2121,17 +1857,11 @@ export const BookingWidget = ({
                         }
                         className={errors.document ? "border-red-500" : ""}
                       />
-                      {errors.document && (
-                        <p className="text-sm text-red-500 mt-1">
-                          {errors.document}
-                        </p>
-                      )}
+                      {errors.document && <p className="text-sm text-red-500 mt-1">{errors.document}</p>}
                     </div>
 
                     <div>
-                      <Label htmlFor="guestNotes">
-                        Notas Adicionales (Opcional)
-                      </Label>
+                      <Label htmlFor="guestNotes">Notas Adicionales (Opcional)</Label>
                       <Input
                         id="guestNotes"
                         placeholder="Solicitudes especiales, alergias, etc."
@@ -2154,26 +1884,14 @@ export const BookingWidget = ({
                           onChange={(e) => setTermsAccepted(e.target.checked)}
                           className="mt-1"
                         />
-                        <label
-                          htmlFor="termsAccepted"
-                          className="text-sm text-gray-700 flex-1"
-                        >
+                        <label htmlFor="termsAccepted" className="text-sm text-gray-700 flex-1">
                           Acepto los{" "}
-                          <span className="text-red-600 underline cursor-pointer">
-                            términos y condiciones
-                          </span>{" "}
-                          del hotel, así como las{" "}
-                          <span className="text-red-600 underline cursor-pointer">
-                            políticas de cancelación
-                          </span>
-                          .
+                          <span className="text-red-600 underline cursor-pointer">términos y condiciones</span> del
+                          hotel, así como las{" "}
+                          <span className="text-red-600 underline cursor-pointer">políticas de cancelación</span>.
                         </label>
                       </div>
-                      {errors.terms && (
-                        <p className="text-sm text-red-500 mt-2 ml-6">
-                          {errors.terms}
-                        </p>
-                      )}
+                      {errors.terms && <p className="text-sm text-red-500 mt-2 ml-6">{errors.terms}</p>}
                     </div>
                   </div>
 
@@ -2197,16 +1915,10 @@ export const BookingWidget = ({
                   </div>
 
                   <div>
-                    <h3 className="text-2xl font-bold text-green-800 mb-2">
-                      ¡Reserva Confirmada!
-                    </h3>
-                    <p className="text-gray-600 mb-4">
-                      Tu reserva ha sido procesada exitosamente
-                    </p>
+                    <h3 className="text-2xl font-bold text-green-800 mb-2">¡Reserva Confirmada!</h3>
+                    <p className="text-gray-600 mb-4">Tu reserva ha sido procesada exitosamente</p>
                     <div className="bg-gray-50 rounded-lg p-4 text-left">
-                      <h4 className="font-semibold text-gray-800 mb-2">
-                        Detalles de la Reserva:
-                      </h4>
+                      <h4 className="font-semibold text-gray-800 mb-2">Detalles de la Reserva:</h4>
                       <div className="text-sm text-gray-600 space-y-1">
                         <p>
                           <strong>ID de Reserva:</strong> {bookingId}
@@ -2225,11 +1937,7 @@ export const BookingWidget = ({
                         </p>
                         <p>
                           <strong>Método de Pago:</strong>{" "}
-                          {
-                            paymentMethods.find(
-                              (m) => m.id === selectedPaymentMethod
-                            )?.name
-                          }
+                          {paymentMethods.find((m) => m.id === selectedPaymentMethod)?.name}
                         </p>
                       </div>
                     </div>
@@ -2247,26 +1955,22 @@ Check-out: ${formatDate(checkOut)}
 Huéspedes: ${guests}
 Noches: ${bookingCalculations.nights}
 Total: $${bookingCalculations.total}
-Método de Pago: ${
-                          paymentMethods.find(
-                            (m) => m.id === selectedPaymentMethod
-                          )?.name
-                        }
+Método de Pago: ${paymentMethods.find((m) => m.id === selectedPaymentMethod)?.name}
 
 Huésped Principal:
 Nombre: ${guestInfo.name}
 Email: ${guestInfo.email}
 Teléfono: ${guestInfo.phone}
-                        `.trim();
+                        `.trim()
 
                         if (navigator.share) {
                           navigator.share({
                             title: "Confirmación de Reserva",
                             text: bookingDetails,
-                          });
+                          })
                         } else {
-                          copyToClipboard(bookingDetails);
-                          alert("Detalles copiados al portapapeles");
+                          copyToClipboard(bookingDetails)
+                          alert("Detalles copiados al portapapeles")
                         }
                       }}
                       variant="outline"
@@ -2278,7 +1982,7 @@ Teléfono: ${guestInfo.phone}
 
                     <Button
                       onClick={() => {
-                        const element = document.createElement("a");
+                        const element = document.createElement("a")
                         const bookingDetails = `
 Reserva Confirmada - Hotel Paradise
 
@@ -2292,9 +1996,7 @@ Número de Huéspedes: ${guests}
 Número de Noches: ${bookingCalculations.nights}
 
 DESGLOSE DE PRECIOS:
-Subtotal (${bookingCalculations.nights} noches × $${pricePerNight}): $${
-                          bookingCalculations.subtotal
-                        }
+Subtotal (${bookingCalculations.nights} noches × $${pricePerNight}): $${bookingCalculations.subtotal}
 Impuestos y Tasas: $${bookingCalculations.taxes}
 TOTAL: $${bookingCalculations.total}
 
@@ -2308,16 +2010,16 @@ Teléfono: ${guestInfo.phone}
 Documento: ${guestInfo.document}
 
 ¡Gracias por elegir Hotel Paradise!
-                        `.trim();
+                        `.trim()
 
                         const file = new Blob([bookingDetails], {
                           type: "text/plain",
-                        });
-                        element.href = URL.createObjectURL(file);
-                        element.download = `reserva-${bookingId}.txt`;
-                        document.body.appendChild(element);
-                        element.click();
-                        document.body.removeChild(element);
+                        })
+                        element.href = URL.createObjectURL(file)
+                        element.download = `reserva-${bookingId}.txt`
+                        document.body.appendChild(element)
+                        element.click()
+                        document.body.removeChild(element)
                       }}
                       variant="outline"
                       className="flex-1"
@@ -2327,10 +2029,7 @@ Documento: ${guestInfo.document}
                     </Button>
                   </div>
 
-                  <Button
-                    onClick={closePaymentModal}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white py-3"
-                  >
+                  <Button onClick={closePaymentModal} className="w-full bg-red-600 hover:bg-red-700 text-white py-3">
                     Cerrar
                   </Button>
                 </div>
@@ -2340,7 +2039,7 @@ Documento: ${guestInfo.document}
         </div>
       )}
     </>
-  );
-};
+  )
+}
 
-export default BookingWidget;
+export default BookingWidget

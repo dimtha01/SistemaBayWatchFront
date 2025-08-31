@@ -30,8 +30,8 @@ import {
   DEFAULT_UNAVAILABLE_DATES,
   DEFAULT_RESERVED_PERIODS,
 } from "../../utils/room-card.constants";
-import BookingWidget from "@/components/RoomDetails/BookingWidget";
 import { useEffect, useState, type ReactNode } from "react";
+import { BookingWidget } from "@/modules/booking/components";
 
 export const RoomCard = ({
   id,
