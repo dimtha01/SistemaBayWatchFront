@@ -129,7 +129,7 @@ const RoomDetailsPage = () => {
       <main className="relative z-10 pt-16 md:pt-24 pb-12 min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link
-            to="/habitaciones"
+            to="/rooms-and-suites"
             className="inline-flex items-center text-gray-700 hover:text-red-600 text-sm mb-4 md:mb-6 font-semibold"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
