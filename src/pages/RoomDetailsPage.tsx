@@ -9,6 +9,7 @@ import {
   RoomAmenities,
   RoomReviews,
   type Review,
+  type BookingData,
 } from "@/modules/rooms";
 import { useRoomDetails } from "@/modules/rooms/hook/useRoomDetails";
 import BookingWidget from "@/components/RoomDetails/BookingWidget";
@@ -27,7 +28,7 @@ const RoomDetailsPage = () => {
     }
   }, [roomData]);
 
-  const handleBooking = (data: any) => {
+  const handleBooking = (data: BookingData) => {
     console.log("Reserva realizada:", data);
     try {
       console.log("Procesando reserva...", {

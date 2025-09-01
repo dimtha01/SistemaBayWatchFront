@@ -106,18 +106,8 @@ export interface BookingData {
   serviceFee: number;
   cleaningFee: number;
   total: number;
-  bookingDate: string;
-  status: "pending" | "confirmed" | "cancelled";
-  paymentMethod: string;
-  paymentDetails?: any;
-  guestInfo?: {
-    name: string;
-    email: string;
-    phone: string;
-    document?: string;
-    notes?: string;
   };
-}
+
 
 export interface ViewIconsMap {
   [key: string]: React.ReactNode;
