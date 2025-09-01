@@ -10,8 +10,8 @@ import {
   RoomReviews,
   type Review,
 } from "@/modules/rooms";
-import { BookingWidget, type BookingData } from "@/modules/booking";
 import { useRoomDetails } from "@/modules/rooms/hook/useRoomDetails";
+import BookingWidget from "@/components/RoomDetails/BookingWidget";
 
 const RoomDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,22 +27,7 @@ const RoomDetailsPage = () => {
     }
   }, [roomData]);
 
-  const unavailableDates: string[] = [];
-  const reservedPeriods =
-    roomData?.reservedDates.map((period) => ({
-      start: period.start,
-      end: period.end,
-      reason: "Reserva confirmada",
-    })) || [];
-
-  // Configuration for booking widget
-  const bookingConfig = {
-    maxGuests: roomData?.roomType.maxCapacity || 4,
-    minNights: 1,
-    maxNights: 30,
-  };
-
-  const handleBooking = (data: BookingData) => {
+  const handleBooking = (data: any) => {
     console.log("Reserva realizada:", data);
     try {
       console.log("Procesando reserva...", {
@@ -56,21 +41,18 @@ const RoomDetailsPage = () => {
     }
   };
 
-
-
-  const handleAddReview = (newReview: Omit<Review, 'id' | 'date'>) => {
-  const review = {
-    id: reviews.length + 1, // Generar un ID único
-    ...newReview,
-    date: new Date().toLocaleDateString("es-ES", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }),
+  const handleAddReview = (newReview: Omit<Review, "id" | "date">) => {
+    const review = {
+      id: reviews.length + 1, // Generar un ID único
+      ...newReview,
+      date: new Date().toLocaleDateString("es-ES", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    };
+    setReviews([review, ...reviews]);
   };
-  setReviews([review, ...reviews]);
-};
-
 
   useEffect(() => {
     window.scrollTo({
@@ -190,13 +172,12 @@ const RoomDetailsPage = () => {
 
             <div className="lg:col-span-1">
               <BookingWidget
+                roomId={roomId}
                 pricePerNight={roomData.roomType.basePrice}
                 onBooking={handleBooking}
-                maxGuests={bookingConfig.maxGuests}
-                minNights={bookingConfig.minNights}
-                maxNights={bookingConfig.maxNights}
-                unavailableDates={unavailableDates}
-                reservedPeriods={reservedPeriods}
+                maxGuests={roomData?.roomType.maxCapacity || 4}
+                minNights={1}
+                maxNights={30}
               />
             </div>
           </div>

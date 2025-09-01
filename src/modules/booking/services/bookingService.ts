@@ -1,18 +1,18 @@
-import type { BookingCalculations, BookingData, GuestInfo, PaymentDetails } from "../types"
-import { format } from "date-fns"
-import { generateBookingId } from "../utils"
+import type { BookingData } from "../types/booking.types";
+import { generateBookingId } from "../utils/clipboardUtils";
+import { format } from "date-fns";
 
 export const createBooking = (
   checkIn: Date | undefined,
   checkOut: Date | undefined,
   guests: number,
   pricePerNight: number,
-  bookingCalculations: BookingCalculations,
+  bookingCalculations: any,
   selectedPaymentMethod: string,
-  paymentDetails: PaymentDetails,
-  guestInfo: GuestInfo,
+  paymentDetails: any,
+  guestInfo: any
 ): BookingData => {
-  const newBookingId = generateBookingId()
+  const newBookingId = generateBookingId();
 
   return {
     id: newBookingId,
@@ -31,10 +31,13 @@ export const createBooking = (
     paymentMethod: selectedPaymentMethod,
     paymentDetails,
     guestInfo,
-  }
-}
+  };
+};
 
-export const generateBookingReceipt = (bookingData: BookingData, paymentMethodName: string): string => {
+export const generateBookingReceipt = (
+  bookingData: BookingData,
+  paymentMethodName: string
+): string => {
   return `
 Reserva Confirmada - Hotel Paradise
 
@@ -48,7 +51,9 @@ Número de Huéspedes: ${bookingData.guests}
 Número de Noches: ${bookingData.nights}
 
 DESGLOSE DE PRECIOS:
-Subtotal (${bookingData.nights} noches × $${bookingData.pricePerNight}): $${bookingData.subtotal}
+Subtotal (${bookingData.nights} noches × $${bookingData.pricePerNight}): $${
+    bookingData.subtotal
+  }
 Impuestos y Tasas: $${bookingData.taxes}
 TOTAL: $${bookingData.total}
 
@@ -62,5 +67,5 @@ Teléfono: ${bookingData.guestInfo?.phone}
 Documento: ${bookingData.guestInfo?.document}
 
 ¡Gracias por elegir Hotel Paradise!
-  `.trim()
-}
+  `.trim();
+};

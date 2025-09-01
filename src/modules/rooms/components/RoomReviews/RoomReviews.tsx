@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -43,7 +41,6 @@ export const RoomReviews = ({
 
     return stars;
   };
-  console.log(reviews);
 
   return (
     <>

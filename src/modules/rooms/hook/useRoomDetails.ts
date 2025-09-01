@@ -67,21 +67,17 @@ export const useRoomDetails = (roomId: string): UseRoomDetailsReturn => {
     try {
       setLoading(true)
       setError(null)
-      console.log("[v0] Fetching room details for ID:", roomId)
 
       const response = await fetchRoomDetails(roomId)
-      console.log("[v0] API response received:", response)
 
       if (response.success && response.data) {
         const transformedData = transformApiResponse(response.data)
-        console.log("[v0] Transformed room data:", transformedData)
         setRoomData(transformedData)
       } else {
         throw new Error(response.message || "Failed to fetch room details")
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error occurred"
-      console.error("[v0] Error fetching room details:", errorMessage)
       setError(errorMessage)
     } finally {
       setLoading(false)

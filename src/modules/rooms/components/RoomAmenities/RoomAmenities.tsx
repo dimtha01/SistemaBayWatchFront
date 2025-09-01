@@ -23,7 +23,6 @@ export const RoomAmenities = ({ amenitiesData }: RoomAmenitiesProps) => {
       </>
     );
   }
-  console.log(amenitiesData);
 
   return (
     <>

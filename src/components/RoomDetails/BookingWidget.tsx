@@ -1,7 +1,3 @@
-"use client";
-
-import type React from "react";
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,6 +36,8 @@ import {
   X,
   Share2,
   Download,
+  Info,
+  InfoIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -59,6 +57,8 @@ interface BookingWidgetProps {
     guestName?: string;
     status?: "confirmed" | "pending" | "checkout";
   }[];
+  // 🆕 NUEVO PARÁMETRO PARA EL ID DE LA HABITACIÓN
+  roomId: number;
 }
 
 interface BookingData {
@@ -95,6 +95,19 @@ interface PaymentMethod {
   available: boolean;
 }
 
+// 🆕 INTERFACES PARA LA API
+interface ReservaAPI {
+  fecha_entrada: string;
+  fecha_salida: string;
+  estado_reserva: string;
+}
+
+interface APIResponse {
+  success: boolean;
+  message: string;
+  data: ReservaAPI[];
+}
+
 export const BookingWidget = ({
   pricePerNight,
   onBooking,
@@ -103,6 +116,7 @@ export const BookingWidget = ({
   maxNights = 30,
   unavailableDates = [],
   reservedPeriods = [],
+  roomId, // 🆕 PARÁMETRO OBLIGATORIO
 }: BookingWidgetProps) => {
   const [checkIn, setCheckIn] = useState<Date | undefined>();
   const [checkOut, setCheckOut] = useState<Date | undefined>();
@@ -142,9 +156,69 @@ export const BookingWidget = ({
   const [dateErrors, setDateErrors] = useState<{ [key: string]: string }>({});
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isValidBooking, setIsValidBooking] = useState(false);
-  console.log(reservedPeriods);
 
-  // Métodos de pago disponibles
+  // 🆕 ESTADOS PARA LA API
+  const [apiReservedPeriods, setApiReservedPeriods] = useState<
+    {
+      start: string;
+      end: string;
+      reason?: string;
+      guestName?: string;
+      status?: "confirmed" | "pending" | "checkout";
+    }[]
+  >([]);
+  const [isLoadingReservations, setIsLoadingReservations] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  // AGREGAR ESTE useEffect DESPUÉS DE TODOS LOS useState
+useEffect(() => {
+  // Inyectar estilos CSS una sola vez
+  if (!document.getElementById("calendar-custom-styles")) {
+    const customStyles = `
+      .calendar-reserved-confirmed {
+        background-color: #ef4444 !important;
+        color: white !important;
+        font-weight: 600 !important;
+        border-radius: 6px !important;
+      }
+      .calendar-reserved-pending {
+        background-color: #f59e0b !important;
+        color: #92400e !important;
+        font-weight: 500 !important;
+        border-radius: 6px !important;
+      }
+      .calendar-reserved-checkout {
+        background-color: #3b82f6 !important;
+        color: white !important;
+        font-weight: 500 !important;
+        border-radius: 6px !important;
+      }
+      .calendar-selected-checkin {
+        background-color: #10b981 !important;
+        color: white !important;
+        font-weight: 700 !important;
+        border-radius: 6px !important;
+      }
+      .calendar-selected-checkout {
+        background-color: #059669 !important;
+        color: white !important;
+        font-weight: 700 !important;
+        border-radius: 6px !important;
+      }
+      .calendar-selected-range {
+        background-color: #d1fae5 !important;
+        color: #065f46 !important;
+        border-radius: 6px !important;
+      }
+    `;
+
+    const styleElement = document.createElement("style");
+    styleElement.id = "calendar-custom-styles";
+    styleElement.textContent = customStyles;
+    document.head.appendChild(styleElement);
+  }
+}, []); // ← DEPENDENCIAS VACÍAS - SOLO SE EJECUTA UNA VEZ
+// Métodos de pago disponibles
   const paymentMethods: PaymentMethod[] = [
     {
       id: "efectivo",
@@ -199,6 +273,86 @@ export const BookingWidget = ({
   // Obtener fecha mínima (hoy)
   const today = new Date();
 
+  // 🆕 FUNCIÓN PARA OBTENER RESERVAS DE LA API
+  const fetchReservations = useCallback(async () => {
+    if (!roomId) return;
+
+    setIsLoadingReservations(true);
+    setApiError(null);
+
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/reservaHabitacion/${roomId}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const apiData: APIResponse = await response.json();
+
+      if (apiData.success && apiData.data) {
+        // 🔄 CONVERTIR DATOS DE LA API AL FORMATO ESPERADO
+        const convertedPeriods = apiData.data.map((reserva) => {
+          // Convertir estado de la API a nuestro formato
+          let status: "confirmed" | "pending" | "checkout" = "confirmed";
+
+          switch (reserva.estado_reserva.toLowerCase()) {
+            case "confirmada":
+            case "confirmed":
+              status = "confirmed";
+              break;
+            case "pendiente":
+            case "pending":
+            case "en proceso":
+              status = "pending";
+              break;
+            case "checkout":
+            case "finalizada":
+              status = "checkout";
+              break;
+            default:
+              status = "confirmed";
+          }
+
+          return {
+            start: reserva.fecha_entrada,
+            end: reserva.fecha_salida,
+            status,
+            reason: `Reserva ${reserva.estado_reserva}`,
+            guestName: undefined, // La API no proporciona nombre del huésped
+          };
+        });
+
+        setApiReservedPeriods(convertedPeriods);
+        console.log(
+          `✅ Cargadas ${convertedPeriods.length} reservas para la habitación ${roomId}`
+        );
+      } else {
+        console.log(
+          `ℹ️ ${apiData.message || "No hay reservas para esta habitación"}`
+        );
+        setApiReservedPeriods([]);
+      }
+    } catch (error) {
+      console.error("❌ Error al cargar reservas:", error);
+      setApiError(error instanceof Error ? error.message : "Error desconocido");
+      setApiReservedPeriods([]);
+    } finally {
+      setIsLoadingReservations(false);
+    }
+  }, [roomId]);
+
+  // 🆕 CARGAR RESERVAS AL MONTAR EL COMPONENTE Y CUANDO CAMBIE EL roomId
+  useEffect(() => {
+    fetchReservations();
+  }, [fetchReservations]);
+
+  // 🔄 COMBINAR PERÍODOS RESERVADOS DE PROPS Y API
+  const allReservedPeriods = useMemo(() => {
+    return [...reservedPeriods, ...apiReservedPeriods];
+  }, [reservedPeriods, apiReservedPeriods]);
+
   // ✅ FUNCIÓN PARA VERIFICAR SI UNA FECHA ESTÁ DESHABILITADA
   const isDateDisabled = useCallback(
     (date: Date): boolean => {
@@ -211,88 +365,20 @@ export const BookingWidget = ({
       if (unavailableDates.includes(dateString)) return true;
 
       // Verificar períodos reservados (intervalo semi-abierto [start, end))
-      return reservedPeriods.some((period) => {
+      return allReservedPeriods.some((period) => {
         const startDate = new Date(period.start);
         const endDate = new Date(period.end);
         return date >= startDate && date < endDate;
       });
     },
-    [unavailableDates, reservedPeriods]
+    [unavailableDates, allReservedPeriods]
   );
 
   // ✅ FUNCIÓN MEJORADA PARA OBTENER MODIFICADORES CON COLORES CORREGIDOS
+  // Línea ~280 - REEMPLAZAR TODA LA FUNCIÓN
   const getDateModifiers = useCallback(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const modifiers: any = {};
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const modifiersClassNames: any = {};
-
-    // ✅ CSS personalizado para forzar los colores
-    const customStyles = `
-      .calendar-reserved-confirmed {
-        background-color: #ef4444 !important;
-        color: white !important;
-        font-weight: 600 !important;
-        border-radius: 6px !important;
-      }
-      .calendar-reserved-confirmed:hover {
-        background-color: #dc2626 !important;
-        color: white !important;
-      }
-      .calendar-reserved-pending {
-        background-color: #f59e0b !important;
-        color: #92400e !important;
-        font-weight: 500 !important;
-        border-radius: 6px !important;
-      }
-      .calendar-reserved-pending:hover {
-        background-color: #d97706 !important;
-        color: #92400e !important;
-      }
-      .calendar-reserved-checkout {
-        background-color: #3b82f6 !important;
-        color: white !important;
-        font-weight: 500 !important;
-        border-radius: 6px !important;
-      }
-      .calendar-reserved-checkout:hover {
-        background-color: #2563eb !important;
-        color: white !important;
-      }
-      .calendar-selected-checkin {
-        background-color: #10b981 !important;
-        color: white !important;
-        font-weight: 700 !important;
-        border-radius: 6px !important;
-        box-shadow: 0 0 0 2px #6ee7b7 !important;
-      }
-      .calendar-selected-checkout {
-        background-color: #059669 !important;
-        color: white !important;
-        font-weight: 700 !important;
-        border-radius: 6px !important;
-        box-shadow: 0 0 0 2px #6ee7b7 !important;
-      }
-      .calendar-selected-range {
-        background-color: #d1fae5 !important;
-        color: #065f46 !important;
-        border-radius: 6px !important;
-      }
-      .calendar-unavailable {
-        background-color: #fca5a5 !important;
-        color: #991b1b !important;
-        text-decoration: line-through !important;
-        border-radius: 6px !important;
-      }
-    `;
-
-    // Inyectar estilos si no existen
-    if (!document.getElementById("calendar-custom-styles")) {
-      const styleElement = document.createElement("style");
-      styleElement.id = "calendar-custom-styles";
-      styleElement.textContent = customStyles;
-      document.head.appendChild(styleElement);
-    }
 
     // Marcar fechas no disponibles
     const unavailableDateObjects = unavailableDates.map(
@@ -300,16 +386,15 @@ export const BookingWidget = ({
     );
     if (unavailableDateObjects.length > 0) {
       modifiers.unavailable = unavailableDateObjects;
-      modifiersClassNames.unavailable = "calendar-unavailable";
+      modifiersClassNames.unavailable = "opacity-50 line-through text-red-500";
     }
 
-    // Marcar períodos reservados con diferentes colores según el estado
-    reservedPeriods.forEach((period, index) => {
+    // Marcar períodos reservados
+    allReservedPeriods.forEach((period, index) => {
       const startDate = new Date(period.start);
       const endDate = new Date(period.end);
       const reservedDates: Date[] = [];
 
-      // Generar todas las fechas del período (excluyendo la fecha de checkout)
       for (
         let date = new Date(startDate);
         date < endDate;
@@ -321,31 +406,35 @@ export const BookingWidget = ({
       const modifierKey = `reserved_${index}`;
       modifiers[modifierKey] = reservedDates;
 
-      // Diferentes estilos según el estado
+      // Diferentes estilos según el estado SIN MANIPULAR EL DOM
       switch (period.status) {
         case "confirmed":
-          modifiersClassNames[modifierKey] = "calendar-reserved-confirmed";
+          modifiersClassNames[modifierKey] =
+            "bg-red-500 text-white font-semibold";
           break;
         case "pending":
-          modifiersClassNames[modifierKey] = "calendar-reserved-pending";
+          modifiersClassNames[modifierKey] =
+            "bg-yellow-400 text-yellow-900 font-medium";
           break;
         case "checkout":
-          modifiersClassNames[modifierKey] = "calendar-reserved-checkout";
+          modifiersClassNames[modifierKey] =
+            "bg-blue-400 text-white font-medium";
           break;
         default:
-          modifiersClassNames[modifierKey] = "calendar-reserved-confirmed";
+          modifiersClassNames[modifierKey] =
+            "bg-red-500 text-white font-semibold";
       }
     });
 
     // Marcar fechas seleccionadas
     if (checkIn) {
       modifiers.checkIn = [checkIn];
-      modifiersClassNames.checkIn = "calendar-selected-checkin";
+      modifiersClassNames.checkIn = "bg-green-500 text-white font-bold";
     }
 
     if (checkOut) {
       modifiers.checkOut = [checkOut];
-      modifiersClassNames.checkOut = "calendar-selected-checkout";
+      modifiersClassNames.checkOut = "bg-green-600 text-white font-bold";
     }
 
     // Marcar rango seleccionado
@@ -362,142 +451,172 @@ export const BookingWidget = ({
       }
       if (rangeDates.length > 0) {
         modifiers.selectedRange = rangeDates;
-        modifiersClassNames.selectedRange = "calendar-selected-range";
+        modifiersClassNames.selectedRange = "bg-green-100 text-green-800";
       }
     }
 
     return { modifiers, modifiersClassNames };
-  }, [unavailableDates, reservedPeriods, checkIn, checkOut]);
+  }, [unavailableDates, allReservedPeriods, checkIn, checkOut]);
 
   // ✅ VALIDACIÓN DE FECHAS ACTUALIZADA
-  const validateDates = useCallback(
-    (checkInDate: Date | undefined, checkOutDate: Date | undefined) => {
-      const newDateErrors: { [key: string]: string } = {};
+ // ✅ REEMPLAZAR validateDates COMPLETAMENTE
+const validateDates = useCallback(
+  (checkInDate: Date | undefined, checkOutDate: Date | undefined) => {
+    if (!checkInDate || !checkOutDate) return true;
 
-      if (!checkInDate || !checkOutDate) return true;
+    const newDateErrors: { [key: string]: string } = {};
 
-      // Validar que check-in no esté deshabilitado
-      if (isDateDisabled(checkInDate)) {
-        newDateErrors.checkIn = "Fecha de check-in no disponible";
+    // Validar que check-in no esté deshabilitado
+    if (isDateDisabled(checkInDate)) {
+      newDateErrors.checkIn = "Fecha de check-in no disponible";
+    }
+
+    // Validar que no haya fechas deshabilitadas en el rango
+    const start = new Date(checkInDate);
+    const end = new Date(checkOutDate);
+
+    for (
+      let date = new Date(start);
+      date < end;
+      date.setDate(date.getDate() + 1)
+    ) {
+      if (isDateDisabled(date)) {
+        newDateErrors.checkOut = "Tu estadía incluye fechas no disponibles";
+        break;
       }
+    }
 
-      // Validar que no haya fechas deshabilitadas en el rango
-      const start = new Date(checkInDate);
-      const end = new Date(checkOutDate);
-
-      for (
-        let date = new Date(start);
-        date < end;
-        date.setDate(date.getDate() + 1)
-      ) {
-        if (isDateDisabled(date)) {
-          newDateErrors.checkOut = "Tu estadía incluye fechas no disponibles";
-          break;
-        }
-      }
-
+    // Solo actualizar si hay cambios
+    const hasErrors = Object.keys(newDateErrors).length > 0;
+    const currentHasErrors = Object.keys(dateErrors).length > 0;
+    
+    if (hasErrors !== currentHasErrors || 
+        JSON.stringify(newDateErrors) !== JSON.stringify(dateErrors)) {
       setDateErrors(newDateErrors);
-      return Object.keys(newDateErrors).length === 0;
-    },
-    [isDateDisabled]
-  );
+    }
+
+    return !hasErrors;
+  },
+  [isDateDisabled, dateErrors] // ← Dependencias específicas
+);
+
 
   // ✅ CÁLCULOS DE RESERVA ACTUALIZADOS
-  const bookingCalculations = useMemo(() => {
-    if (!checkIn || !checkOut) {
-      return {
-        nights: 0,
-        subtotal: 0,
-        taxes: 150,
-        total: 0,
-        isValidDates: false,
-      };
-    }
+// ✅ REEMPLAZAR bookingCalculations COMPLETAMENTE
+const bookingCalculations = useMemo(() => {
+  if (!checkIn || !checkOut) {
+    return {
+      nights: 0,
+      subtotal: 0,
+      taxes: 150,
+      total: 150,
+      isValidDates: false,
+    };
+  }
 
-    if (checkOut <= checkIn) {
-      return {
-        nights: 0,
-        subtotal: 0,
-        taxes: 150,
-        total: 0,
-        isValidDates: false,
-      };
-    }
+  if (checkOut <= checkIn) {
+    return {
+      nights: 0,
+      subtotal: 0,
+      taxes: 150,
+      total: 150,
+      isValidDates: false,
+    };
+  }
 
-    const nights = Math.floor(
-      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
-    );
+  const nights = Math.floor(
+    (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+  );
 
-    if (nights < minNights || nights > maxNights) {
-      return {
-        nights,
-        subtotal: 0,
-        taxes: 150,
-        total: 0,
-        isValidDates: false,
-      };
-    }
-
-    const isValidDateRange = validateDates(checkIn, checkOut);
-    const subtotal = nights * pricePerNight;
-    const taxes = 150;
-    const total = subtotal + taxes;
-
+  if (nights < minNights || nights > maxNights) {
     return {
       nights,
-      subtotal,
-      taxes,
-      total,
-      isValidDates: isValidDateRange,
+      subtotal: 0,
+      taxes: 150,
+      total: 150,
+      isValidDates: false,
     };
-  }, [checkIn, checkOut, pricePerNight, minNights, maxNights, validateDates]);
+  }
+
+  const subtotal = nights * pricePerNight;
+  const taxes = 150;
+  const total = subtotal + taxes;
+
+  // Validación simple sin dependencias circulares
+  const hasDateConflicts = (() => {
+    for (
+      let date = new Date(checkIn);
+      date < checkOut;
+      date.setDate(date.getDate() + 1)
+    ) {
+      if (isDateDisabled(date)) {
+        return true;
+      }
+    }
+    return false;
+  })();
+
+  return {
+    nights,
+    subtotal,
+    taxes,
+    total,
+    isValidDates: !hasDateConflicts,
+  };
+}, [checkIn, checkOut, pricePerNight, minNights, maxNights, isDateDisabled]);
+
 
   // ✅ useEffect PARA ACTUALIZAR isValidBooking
-  useEffect(() => {
-    const isValid =
-      bookingCalculations.isValidDates &&
-      Object.keys(dateErrors).length === 0 &&
-      checkIn &&
-      checkOut &&
-      bookingCalculations.nights > 0;
+  // ✅ REEMPLAZAR useEffect COMPLETAMENTE
+useEffect(() => {
+  const isValid = Boolean(
+    checkIn &&
+    checkOut &&
+    bookingCalculations.isValidDates &&
+    bookingCalculations.nights > 0 &&
+    Object.keys(dateErrors).length === 0
+  );
 
-    setIsValidBooking(isValid ?? false);
-  }, [
-    bookingCalculations.isValidDates,
-    dateErrors,
-    checkIn,
-    checkOut,
-    bookingCalculations.nights,
-  ]);
+  // Solo actualizar si hay cambio
+  if (isValid !== isValidBooking) {
+    setIsValidBooking(isValid);
+  }
+}, [checkIn, checkOut, bookingCalculations.isValidDates, bookingCalculations.nights, dateErrors, isValidBooking]);
+
 
   // ✅ MANEJAR SELECCIÓN DE FECHAS EN EL CALENDARIO
-  const handleCheckInSelect = useCallback(
-    (date: Date | undefined) => {
-      setCheckIn(date);
-      // Si la fecha de checkout es anterior o igual, limpiarla
-      if (checkOut && date && checkOut <= date) {
-        setCheckOut(undefined);
-      }
-      setShowCheckInCalendar(false);
+ // ✅ REEMPLAZAR ESTAS FUNCIONES COMPLETAMENTE
+const handleCheckInSelect = useCallback(
+  (date: Date | undefined) => {
+    if (!date) return;
+    
+    setCheckIn(date);
+    
+    // Si la fecha de checkout es anterior o igual, limpiarla
+    if (checkOut && checkOut <= date) {
+      setCheckOut(undefined);
+    }
+    
+    setShowCheckInCalendar(false);
+    
+    // Limpiar errores de fechas
+    setDateErrors({});
+  },
+  [checkOut] // ← SOLO checkOut como dependencia
+);
 
-      if (date) {
-        validateDates(date, checkOut);
-      }
-    },
-    [checkOut, validateDates]
-  );
-
-  const handleCheckOutSelect = useCallback(
-    (date: Date | undefined) => {
-      setCheckOut(date);
-      setShowCheckOutCalendar(false);
-
-      if (checkIn && date) {
-        validateDates(checkIn, date);
-      }
-    },
-    [checkIn, validateDates]
-  );
+const handleCheckOutSelect = useCallback(
+  (date: Date | undefined) => {
+    if (!date) return;
+    
+    setCheckOut(date);
+    setShowCheckOutCalendar(false);
+    
+    // Limpiar errores de fechas
+    setDateErrors({});
+  },
+  [] // ← SIN DEPENDENCIAS
+);
 
   // ✅ FUNCIONES AUXILIARES
   const generateBookingId = useCallback(() => {
@@ -665,7 +784,7 @@ export const BookingWidget = ({
         id: newBookingId,
         checkIn: checkIn ? format(checkIn, "yyyy-MM-dd") : "",
         checkOut: checkOut ? format(checkOut, "yyyy-MM-dd") : "",
-        guests: Number.parseInt(guests),
+        guests: parseInt(guests),
         nights: bookingCalculations.nights,
         pricePerNight,
         subtotal: bookingCalculations.subtotal,
@@ -747,12 +866,37 @@ export const BookingWidget = ({
     const modal = document.getElementById("mobile-booking-modal");
     if (modal) modal.classList.add("hidden");
   }, []);
-
   // ✅ RENDERIZAR LEYENDA LATERAL DEL CALENDARIO CON PRÓXIMAS RESERVAS ABAJO
   const renderCalendarLegend = useCallback(
     () => (
       <div className="ml-4 flex-shrink-0 w-48">
         <div className="p-4 bg-gray-50 rounded-lg border">
+          {/* INDICADOR DE CARGA */}
+          {isLoadingReservations && (
+            <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                <span>Cargando reservas...</span>
+              </div>
+            </div>
+          )}
+
+          {/* ERROR DE API */}
+          {apiError && (
+            <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="h-3 w-3" />
+                <span>Error: {apiError}</span>
+              </div>
+              <button
+                onClick={fetchReservations}
+                className="mt-1 text-xs underline hover:no-underline"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
+
           {/* LEYENDA PRIMERO */}
           <h4 className="text-sm font-semibold text-gray-700 mb-3">Leyenda:</h4>
           <div className="space-y-3 mb-6">
@@ -780,7 +924,7 @@ export const BookingWidget = ({
 
           {/* PRÓXIMAS RESERVAS ABAJO */}
           {(() => {
-            const upcomingReservations = reservedPeriods
+            const upcomingReservations = allReservedPeriods
               .filter((period) => new Date(period.end) >= today)
               .sort(
                 (a, b) =>
@@ -840,23 +984,27 @@ export const BookingWidget = ({
         </div>
       </div>
     ),
-    [reservedPeriods]
+    [allReservedPeriods, isLoadingReservations, apiError, fetchReservations]
   );
 
   // ✅ OBTENER MODIFICADORES DEL CALENDARIO
-  const { modifiers, modifiersClassNames } = getDateModifiers();
+  // Línea ~750 - REEMPLAZAR CON useMemo
+  const { modifiers, modifiersClassNames } = useMemo(() => {
+    return getDateModifiers();
+  }, [getDateModifiers]);
 
   // ✅ DEBUG LOG
-  useEffect(() => {
-    console.log("Debug booking:", {
-      checkIn: checkIn ? format(checkIn, "yyyy-MM-dd") : null,
-      checkOut: checkOut ? format(checkOut, "yyyy-MM-dd") : null,
-      nights: bookingCalculations.nights,
-      isValidDates: bookingCalculations.isValidDates,
-      dateErrors,
-      isValidBooking,
-    });
-  }, [checkIn, checkOut, bookingCalculations, dateErrors, isValidBooking]);
+ // Línea ~755 - SIMPLIFICAR LAS DEPENDENCIAS
+useEffect(() => {
+  console.log("Debug booking:", {
+    checkIn: checkIn ? format(checkIn, "yyyy-MM-dd") : null,
+    checkOut: checkOut ? format(checkOut, "yyyy-MM-dd") : null,
+    nights: bookingCalculations.nights,
+    isValidBooking,
+    roomId,
+  });
+}, [checkIn, checkOut, bookingCalculations.nights, isValidBooking, roomId]);
+
 
   return (
     <>
@@ -872,6 +1020,31 @@ export const BookingWidget = ({
           <p className="text-gray-600 text-sm mb-6">
             Precio promedio por noche, impuestos y tasas no incluidos.
           </p>
+
+          {/* 🆕 MOSTRAR INFORMACIÓN DE CARGA DE RESERVAS */}
+          {isLoadingReservations && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center space-x-2 text-sm text-blue-700">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span>Actualizando disponibilidad...</span>
+              </div>
+            </div>
+          )}
+
+          {apiError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center space-x-2 text-sm text-red-700">
+                <AlertCircle className="h-4 w-4" />
+                <span>Error al cargar reservas</span>
+              </div>
+              <button
+                onClick={fetchReservations}
+                className="mt-2 text-xs text-red-600 underline hover:no-underline"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* ✅ CALENDARIO DE CHECK-IN CON LEYENDA LATERAL */}
@@ -1010,10 +1183,12 @@ export const BookingWidget = ({
 
             <Button
               type="submit"
-              disabled={!isValidBooking}
+              disabled={!isValidBooking || isLoadingReservations}
               className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-6 text-lg shadow-lg"
             >
-              {isValidBooking
+              {isLoadingReservations
+                ? "Cargando disponibilidad..."
+                : isValidBooking
                 ? "Reservar Ahora"
                 : Object.keys(dateErrors).length > 0
                 ? "Fechas no disponibles"
@@ -1039,9 +1214,10 @@ export const BookingWidget = ({
           </div>
           <Button
             onClick={handleMobileBookingClick}
-            className="bg-red-600 hover:bg-red-700 text-white px-6"
+            disabled={isLoadingReservations}
+            className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-6"
           >
-            Reservar
+            {isLoadingReservations ? "Cargando..." : "Reservar"}
           </Button>
         </div>
       </div>
@@ -1065,6 +1241,31 @@ export const BookingWidget = ({
               ×
             </button>
           </div>
+
+          {/* 🆕 INDICADORES DE ESTADO EN MÓVIL */}
+          {isLoadingReservations && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center space-x-2 text-sm text-blue-700">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                <span>Actualizando disponibilidad...</span>
+              </div>
+            </div>
+          )}
+
+          {apiError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center space-x-2 text-sm text-red-700">
+                <AlertCircle className="h-4 w-4" />
+                <span>Error al cargar reservas</span>
+              </div>
+              <button
+                onClick={fetchReservations}
+                className="mt-2 text-xs text-red-600 underline hover:no-underline"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
 
           <form
             onSubmit={(e) => {
@@ -1106,6 +1307,16 @@ export const BookingWidget = ({
                     />
                     {/* LEYENDA PRIMERO EN MÓVIL */}
                     <div className="p-3 bg-gray-50 border-t">
+                      {/* INDICADOR DE CARGA EN MÓVIL */}
+                      {isLoadingReservations && (
+                        <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                          <div className="flex items-center space-x-2">
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600"></div>
+                            <span>Cargando...</span>
+                          </div>
+                        </div>
+                      )}
+
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">
                         Leyenda:
                       </h4>
@@ -1130,7 +1341,7 @@ export const BookingWidget = ({
 
                       {/* PRÓXIMAS RESERVAS ABAJO EN MÓVIL */}
                       {(() => {
-                        const upcomingReservations = reservedPeriods
+                        const upcomingReservations = allReservedPeriods
                           .filter((period) => new Date(period.end) >= today)
                           .sort(
                             (a, b) =>
@@ -1321,361 +1532,330 @@ export const BookingWidget = ({
 
             <Button
               type="submit"
-              disabled={!isValidBooking}
+              disabled={!isValidBooking || isLoadingReservations}
               className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-4"
             >
-              {isValidBooking
+              {isLoadingReservations
+                ? "Cargando disponibilidad..."
+                : isValidBooking
                 ? "Continuar al Pago"
                 : Object.keys(dateErrors).length > 0
                 ? "Fechas no disponibles"
+                : bookingCalculations.nights > 0 &&
+                  bookingCalculations.nights < minNights
+                ? `Mínimo ${minNights} ${minNights === 1 ? "noche" : "noches"}`
+                : bookingCalculations.nights > maxNights
+                ? `Máximo ${maxNights} noches`
                 : "Selecciona las fechas"}
             </Button>
           </form>
         </div>
       </div>
 
-      {/* ✅ MODAL DE PAGO CON TODOS LOS FORMULARIOS IMPLEMENTADOS */}
+      {/* ✅ MODAL DE PAGO MEJORADO CON VALIDACIÓN COMPLETA */}
       {showPaymentModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                {paymentStep !== "method" && paymentStep !== "success" && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      if (paymentStep === "details") setPaymentStep("method");
-                      else if (paymentStep === "guest") {
-                        setPaymentStep(
-                          selectedPaymentMethod === "efectivo"
-                            ? "method"
-                            : "details"
-                        );
-                      }
-                    }}
-                  >
-                    <ArrowLeft className="h-4 w-4" />
-                  </Button>
-                )}
-                <h2 className="text-2xl font-bold">
-                  {paymentStep === "method" && "Método de Pago"}
-                  {paymentStep === "details" && "Detalles del Pago"}
-                  {paymentStep === "guest" && "Información del Huésped"}
-                  {paymentStep === "success" && "¡Reserva Confirmada!"}
-                </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={closePaymentModal}
+          />
+          <div className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header del Modal */}
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  {paymentStep !== "method" && (
+                    <button
+                      onClick={() => {
+                        if (paymentStep === "details") setPaymentStep("method");
+                        else if (paymentStep === "guest") {
+                          setPaymentStep(
+                            selectedPaymentMethod === "efectivo"
+                              ? "method"
+                              : "details"
+                          );
+                        }
+                      }}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </button>
+                  )}
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {paymentStep === "method" && "Método de Pago"}
+                    {paymentStep === "details" && "Detalles de Pago"}
+                    {paymentStep === "guest" && "Información del Huésped"}
+                    {paymentStep === "success" && "¡Reserva Confirmada!"}
+                  </h2>
+                </div>
+                <button
+                  onClick={closePaymentModal}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="h-6 w-6" />
+                </button>
               </div>
-              <Button variant="ghost" size="sm" onClick={closePaymentModal}>
-                <X className="h-4 w-4" />
-              </Button>
+
+              {/* Indicador de progreso */}
+              <div className="flex items-center mt-4 space-x-2">
+                {["method", "details", "guest", "success"].map(
+                  (step, index) => (
+                    <div key={step} className="flex items-center">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                          paymentStep === step
+                            ? "bg-red-600 text-white"
+                            : index <
+                              ["method", "details", "guest", "success"].indexOf(
+                                paymentStep
+                              )
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-200 text-gray-600"
+                        }`}
+                      >
+                        {index <
+                        ["method", "details", "guest", "success"].indexOf(
+                          paymentStep
+                        ) ? (
+                          <CheckCircle className="h-4 w-4" />
+                        ) : (
+                          index + 1
+                        )}
+                      </div>
+                      {index < 3 && (
+                        <div
+                          className={`w-8 h-0.5 ${
+                            index <
+                            ["method", "details", "guest", "success"].indexOf(
+                              paymentStep
+                            )
+                              ? "bg-green-500"
+                              : "bg-gray-200"
+                          }`}
+                        />
+                      )}
+                    </div>
+                  )
+                )}
+              </div>
             </div>
 
             <div className="p-6">
-              {/* Resumen de la reserva */}
-              {paymentStep !== "success" && (
-                <div className="bg-gradient-to-r from-red-50 to-pink-50 rounded-xl p-4 mb-6 border border-red-100">
-                  <h3 className="font-semibold text-red-800 mb-3">
-                    Resumen de tu Reserva
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <CalendarIcon className="h-4 w-4 text-red-600" />
-                        <span className="text-gray-600">Check-in</span>
-                      </div>
-                      <p className="font-medium">{formatDate(checkIn)}</p>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <CalendarIcon className="h-4 w-4 text-red-600" />
-                        <span className="text-gray-600">Check-out</span>
-                      </div>
-                      <p className="font-medium">{formatDate(checkOut)}</p>
-                    </div>
-                  </div>
-                  <Separator className="my-3" />
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-center space-x-2">
-                      <Users className="h-4 w-4 text-red-600" />
-                      <span className="text-sm text-gray-600">
-                        {guests} huéspedes • {bookingCalculations.nights}{" "}
-                        {bookingCalculations.nights === 1 ? "noche" : "noches"}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-red-600">
-                        ${bookingCalculations.total}
-                      </p>
-                      <p className="text-xs text-gray-500">Total</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ✅ PASO 1: SELECCIÓN DE MÉTODO DE PAGO */}
+              {/* PASO 1: SELECCIÓN DE MÉTODO DE PAGO */}
               {paymentStep === "method" && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold mb-4">
-                    Selecciona tu método de pago
-                  </h3>
-                  <div className="grid gap-4">
-                    {paymentMethods.map((method) => (
-                      <button
-                        key={method.id}
-                        onClick={() => handlePaymentMethodSelect(method.id)}
-                        disabled={!method.available}
-                        className={`p-4 border-2 rounded-xl text-left transition-all hover:shadow-md ${
-                          selectedPaymentMethod === method.id
-                            ? "border-red-500 bg-red-50"
-                            : method.available
-                            ? "border-gray-200 hover:border-gray-300"
-                            : "border-gray-100 bg-gray-50 cursor-not-allowed"
-                        }`}
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div
-                            className={`${method.color} text-white rounded-full p-3 flex-shrink-0`}
-                          >
-                            {method.icon}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2">
-                              <h4 className="font-semibold text-gray-900">
-                                {method.name}
-                              </h4>
-                              {method.id === "efectivo" && (
-                                <Badge
-                                  variant="secondary"
-                                  className="bg-green-100 text-green-700"
-                                >
-                                  Recomendado
-                                </Badge>
-                              )}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-start space-x-3">
+                      <Shield className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <h3 className="font-medium text-blue-900">
+                          Pago Seguro
+                        </h3>
+                        <p className="text-sm text-blue-700 mt-1">
+                          Todos los métodos de pago están protegidos con
+                          encriptación SSL de 256 bits.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3">
+                    {paymentMethods
+                      .filter((method) => method.available)
+                      .map((method) => (
+                        <button
+                          key={method.id}
+                          onClick={() => handlePaymentMethodSelect(method.id)}
+                          className={`p-4 border-2 rounded-lg text-left transition-all hover:border-red-300 hover:bg-red-50 ${
+                            selectedPaymentMethod === method.id
+                              ? "border-red-500 bg-red-50"
+                              : "border-gray-200"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-4">
+                            <div
+                              className={`p-2 rounded-lg text-white ${method.color}`}
+                            >
+                              {method.icon}
                             </div>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {method.description}
-                            </p>
+                            <div className="flex-1">
+                              <h3 className="font-medium text-gray-900">
+                                {method.name}
+                              </h3>
+                              <p className="text-sm text-gray-600 mt-1">
+                                {method.description}
+                              </p>
+                            </div>
+                            {selectedPaymentMethod === method.id && (
+                              <CheckCircle className="h-5 w-5 text-red-600" />
+                            )}
                           </div>
-                          {selectedPaymentMethod === method.id && (
-                            <CheckCircle className="h-6 w-6 text-red-500 flex-shrink-0" />
-                          )}
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      ))}
                   </div>
                 </div>
               )}
 
-              {/* ✅ PASO 2: DETALLES DEL PAGO - TODOS LOS FORMULARIOS */}
+              {/* PASO 2: DETALLES DE PAGO */}
               {paymentStep === "details" && (
                 <div className="space-y-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div
-                      className={`${
-                        paymentMethods.find(
-                          (m) => m.id === selectedPaymentMethod
-                        )?.color
-                      } text-white rounded-full p-3`}
-                    >
-                      {
-                        paymentMethods.find(
-                          (m) => m.id === selectedPaymentMethod
-                        )?.icon
-                      }
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold">
-                        {
-                          paymentMethods.find(
-                            (m) => m.id === selectedPaymentMethod
-                          )?.name
-                        }
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Completa los detalles de tu pago
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* 💳 FORMULARIO DE TARJETA DE CRÉDITO */}
+                  {/* Tarjeta de Crédito/Débito */}
                   {selectedPaymentMethod === "tarjeta" && (
                     <div className="space-y-4">
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <Shield className="h-5 w-5 text-blue-600" />
-                          <span className="text-sm font-medium text-blue-800">
-                            Pago Seguro SSL
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <CreditCard className="h-5 w-5 text-orange-600" />
+                          <span className="font-medium text-orange-900">
+                            Información de la Tarjeta
                           </span>
                         </div>
-                        <p className="text-xs text-blue-700">
-                          Tus datos están protegidos con encriptación de 256
-                          bits
+                        <p className="text-sm text-orange-700 mt-1">
+                          Ingresa los datos de tu tarjeta de crédito o débito.
                         </p>
                       </div>
 
-                      <div>
-                        <Label htmlFor="cardNumber">Número de Tarjeta *</Label>
-                        <Input
-                          id="cardNumber"
-                          placeholder="1234 5678 9012 3456"
-                          value={paymentDetails.cardNumber}
-                          onChange={(e) => {
-                            // Formatear número de tarjeta con espacios
-                            let value = e.target.value
-                              .replace(/\s/g, "")
-                              .replace(/\D/g, "");
-                            value = value.replace(/(\d{4})(?=\d)/g, "$1 ");
-                            if (value.length <= 19) {
-                              // 16 dígitos + 3 espacios
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <Label htmlFor="cardNumber">Número de Tarjeta</Label>
+                          <Input
+                            id="cardNumber"
+                            placeholder="1234 5678 9012 3456"
+                            value={paymentDetails.cardNumber}
+                            onChange={(e) => {
+                              const value = e.target.value
+                                .replace(/\s/g, "")
+                                .replace(/(.{4})/g, "$1 ")
+                                .trim()
+                                .slice(0, 19);
                               setPaymentDetails((prev) => ({
                                 ...prev,
                                 cardNumber: value,
                               }));
+                            }}
+                            className={
+                              errors.cardNumber ? "border-red-500" : ""
                             }
-                          }}
-                          className={errors.cardNumber ? "border-red-500" : ""}
-                          maxLength={19}
-                        />
-                        {errors.cardNumber && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.cardNumber}
-                          </p>
-                        )}
-                      </div>
+                          />
+                          {errors.cardNumber && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.cardNumber}
+                            </p>
+                          )}
+                        </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="expiryDate">
-                            Fecha de Vencimiento *
-                          </Label>
-                          <Input
-                            id="expiryDate"
-                            placeholder="MM/AA"
-                            value={paymentDetails.expiryDate}
-                            onChange={(e) => {
-                              let value = e.target.value.replace(/\D/g, "");
-                              if (value.length >= 2) {
-                                value =
-                                  value.substring(0, 2) +
-                                  "/" +
-                                  value.substring(2, 4);
-                              }
-                              if (value.length <= 5) {
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="expiryDate">Vencimiento</Label>
+                            <Input
+                              id="expiryDate"
+                              placeholder="MM/AA"
+                              value={paymentDetails.expiryDate}
+                              onChange={(e) => {
+                                const value = e.target.value
+                                  .replace(/\D/g, "")
+                                  .replace(/(\d{2})(\d)/, "$1/$2")
+                                  .slice(0, 5);
                                 setPaymentDetails((prev) => ({
                                   ...prev,
                                   expiryDate: value,
                                 }));
+                              }}
+                              className={
+                                errors.expiryDate ? "border-red-500" : ""
                               }
-                            }}
-                            className={
-                              errors.expiryDate ? "border-red-500" : ""
-                            }
-                            maxLength={5}
-                          />
-                          {errors.expiryDate && (
-                            <p className="text-sm text-red-500 mt-1">
-                              {errors.expiryDate}
-                            </p>
-                          )}
-                        </div>
+                            />
+                            {errors.expiryDate && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {errors.expiryDate}
+                              </p>
+                            )}
+                          </div>
 
-                        <div>
-                          <Label htmlFor="cvv">CVV *</Label>
-                          <Input
-                            id="cvv"
-                            placeholder="123"
-                            type="password"
-                            value={paymentDetails.cvv}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(/\D/g, "");
-                              if (value.length <= 4) {
+                          <div>
+                            <Label htmlFor="cvv">CVV</Label>
+                            <Input
+                              id="cvv"
+                              placeholder="123"
+                              value={paymentDetails.cvv}
+                              onChange={(e) => {
+                                const value = e.target.value
+                                  .replace(/\D/g, "")
+                                  .slice(0, 4);
                                 setPaymentDetails((prev) => ({
                                   ...prev,
                                   cvv: value,
                                 }));
-                              }
-                            }}
-                            className={errors.cvv ? "border-red-500" : ""}
-                            maxLength={4}
+                              }}
+                              className={errors.cvv ? "border-red-500" : ""}
+                            />
+                            {errors.cvv && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {errors.cvv}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="cardName">Nombre en la Tarjeta</Label>
+                          <Input
+                            id="cardName"
+                            placeholder="Juan Pérez"
+                            value={paymentDetails.cardName}
+                            onChange={(e) =>
+                              setPaymentDetails((prev) => ({
+                                ...prev,
+                                cardName: e.target.value,
+                              }))
+                            }
+                            className={errors.cardName ? "border-red-500" : ""}
                           />
-                          {errors.cvv && (
-                            <p className="text-sm text-red-500 mt-1">
-                              {errors.cvv}
+                          {errors.cardName && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.cardName}
                             </p>
                           )}
                         </div>
                       </div>
-
-                      <div>
-                        <Label htmlFor="cardName">Nombre en la Tarjeta *</Label>
-                        <Input
-                          id="cardName"
-                          placeholder="JUAN CARLOS PEREZ"
-                          value={paymentDetails.cardName}
-                          onChange={(e) =>
-                            setPaymentDetails((prev) => ({
-                              ...prev,
-                              cardName: e.target.value.toUpperCase(),
-                            }))
-                          }
-                          className={errors.cardName ? "border-red-500" : ""}
-                        />
-                        {errors.cardName && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.cardName}
-                          </p>
-                        )}
-                      </div>
                     </div>
                   )}
 
-                  {/* 🏦 FORMULARIO DE TRANSFERENCIA BANCARIA */}
+                  {/* Transferencia Bancaria */}
                   {selectedPaymentMethod === "transferencia" && (
                     <div className="space-y-4">
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <h4 className="font-semibold text-blue-800 mb-2">
-                          Datos Bancarios para Transferencia
-                        </h4>
-                        <div className="space-y-2 text-sm text-blue-700">
-                          <div className="flex justify-between">
-                            <span className="font-medium">Banco:</span>
-                            <span>Banco de Venezuela</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium">Cuenta:</span>
-                            <span>0102-0123-45-1234567890</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium">Titular:</span>
-                            <span>Hotel Paradise C.A.</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium">RIF:</span>
-                            <span>J-12345678-9</span>
-                          </div>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <Building2 className="h-5 w-5 text-blue-600" />
+                          <span className="font-medium text-blue-900">
+                            Transferencia Bancaria
+                          </span>
                         </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="mt-3 w-full bg-transparent"
-                          onClick={() => {
-                            copyToClipboard("0102-0123-45-1234567890");
-                            alert("Número de cuenta copiado al portapapeles");
-                          }}
-                        >
-                          <Copy className="h-4 w-4 mr-2" />
-                          Copiar Número de Cuenta
-                        </Button>
+                        <div className="mt-3 space-y-2 text-sm text-blue-700">
+                          <p>
+                            <strong>Banco:</strong> Banco de Venezuela
+                          </p>
+                          <p>
+                            <strong>Cuenta:</strong> 0102-1234-56-7890123456
+                          </p>
+                          <p>
+                            <strong>Titular:</strong> Hotel Paradise C.A.
+                          </p>
+                          <p>
+                            <strong>RIF:</strong> J-12345678-9
+                          </p>
+                          <p>
+                            <strong>Monto:</strong> ${bookingCalculations.total}
+                          </p>
+                        </div>
                       </div>
 
                       <div>
                         <Label htmlFor="transferenceReference">
-                          Número de Referencia *
+                          Número de Referencia
                         </Label>
                         <Input
                           id="transferenceReference"
-                          placeholder="Ej: 123456789"
+                          placeholder="Ej: 123456789012"
                           value={paymentDetails.transferenceReference}
                           onChange={(e) =>
                             setPaymentDetails((prev) => ({
@@ -1688,332 +1868,256 @@ export const BookingWidget = ({
                           }
                         />
                         {errors.transferenceReference && (
-                          <p className="text-sm text-red-500 mt-1">
+                          <p className="text-red-500 text-sm mt-1">
                             {errors.transferenceReference}
                           </p>
                         )}
                         <p className="text-xs text-gray-500 mt-1">
-                          Número de referencia que aparece en tu comprobante
+                          Ingresa el número de referencia de tu transferencia
                         </p>
                       </div>
                     </div>
                   )}
 
-                  {/* 📱 FORMULARIO DE PAGO MÓVIL */}
+                  {/* Pago Móvil */}
                   {selectedPaymentMethod === "pago-movil" && (
                     <div className="space-y-4">
-                      <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                        <h4 className="font-semibold text-purple-800 mb-2">
-                          Datos para Pago Móvil
-                        </h4>
-                        <div className="space-y-2 text-sm text-purple-700">
-                          <div className="flex justify-between">
-                            <span className="font-medium">Banco:</span>
-                            <span>0102 - Banco de Venezuela</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium">Teléfono:</span>
-                            <span>0414-123-4567</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium">Cédula:</span>
-                            <span>V-12345678</span>
-                          </div>
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <Smartphone className="h-5 w-5 text-purple-600" />
+                          <span className="font-medium text-purple-900">
+                            Pago Móvil
+                          </span>
                         </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="mt-3 w-full bg-transparent"
-                          onClick={() => {
-                            copyToClipboard("04141234567");
-                            alert("Teléfono copiado al portapapeles");
-                          }}
-                        >
-                          <Copy className="h-4 w-4 mr-2" />
-                          Copiar Teléfono
-                        </Button>
+                        <div className="mt-3 space-y-2 text-sm text-purple-700">
+                          <p>
+                            <strong>Banco:</strong> Banco de Venezuela
+                          </p>
+                          <p>
+                            <strong>Teléfono:</strong> 0414-123-4567
+                          </p>
+                          <p>
+                            <strong>Cédula:</strong> V-12.345.678
+                          </p>
+                          <p>
+                            <strong>Monto:</strong> ${bookingCalculations.total}
+                          </p>
+                        </div>
                       </div>
 
-                      <div>
-                        <Label htmlFor="pagoMovilPhone">Tu Teléfono *</Label>
-                        <Input
-                          id="pagoMovilPhone"
-                          placeholder="0414-123-4567"
-                          value={paymentDetails.pagoMovilPhone}
-                          onChange={(e) => {
-                            let value = e.target.value.replace(/\D/g, "");
-                            if (value.length <= 11) {
-                              if (value.length >= 4) {
-                                value =
-                                  value.substring(0, 4) +
-                                  "-" +
-                                  value.substring(4, 7) +
-                                  "-" +
-                                  value.substring(7, 11);
-                              }
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <Label htmlFor="pagoMovilPhone">Tu Teléfono</Label>
+                          <Input
+                            id="pagoMovilPhone"
+                            placeholder="0414-123-4567"
+                            value={paymentDetails.pagoMovilPhone}
+                            onChange={(e) => {
+                              const value = e.target.value
+                                .replace(/\D/g, "")
+                                .replace(/(\d{4})(\d{3})(\d{4})/, "$1-$2-$3")
+                                .slice(0, 13);
                               setPaymentDetails((prev) => ({
                                 ...prev,
                                 pagoMovilPhone: value,
                               }));
+                            }}
+                            className={
+                              errors.pagoMovilPhone ? "border-red-500" : ""
                             }
-                          }}
-                          className={
-                            errors.pagoMovilPhone ? "border-red-500" : ""
-                          }
-                        />
-                        {errors.pagoMovilPhone && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.pagoMovilPhone}
-                          </p>
-                        )}
-                      </div>
+                          />
+                          {errors.pagoMovilPhone && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.pagoMovilPhone}
+                            </p>
+                          )}
+                        </div>
 
-                      <div>
-                        <Label htmlFor="pagoMovilReference">
-                          Número de Referencia *
-                        </Label>
-                        <Input
-                          id="pagoMovilReference"
-                          placeholder="Ej: 123456789"
-                          value={paymentDetails.pagoMovilReference}
-                          onChange={(e) =>
-                            setPaymentDetails((prev) => ({
-                              ...prev,
-                              pagoMovilReference: e.target.value,
-                            }))
-                          }
-                          className={
-                            errors.pagoMovilReference ? "border-red-500" : ""
-                          }
-                        />
-                        {errors.pagoMovilReference && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.pagoMovilReference}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-1">
-                          Número de referencia del pago móvil
-                        </p>
+                        <div>
+                          <Label htmlFor="pagoMovilReference">
+                            Número de Referencia
+                          </Label>
+                          <Input
+                            id="pagoMovilReference"
+                            placeholder="Ej: 123456789"
+                            value={paymentDetails.pagoMovilReference}
+                            onChange={(e) =>
+                              setPaymentDetails((prev) => ({
+                                ...prev,
+                                pagoMovilReference: e.target.value,
+                              }))
+                            }
+                            className={
+                              errors.pagoMovilReference ? "border-red-500" : ""
+                            }
+                          />
+                          {errors.pagoMovilReference && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.pagoMovilReference}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* 🪙 FORMULARIO DE CRIPTOMONEDAS */}
+                  {/* Criptomonedas */}
                   {selectedPaymentMethod === "crypto" && (
                     <div className="space-y-4">
-                      <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-                        <h4 className="font-semibold text-yellow-800 mb-2">
-                          Direcciones de Wallets
-                        </h4>
-                        <div className="space-y-3 text-sm text-yellow-700">
-                          <div>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="font-medium">
-                                Bitcoin (BTC):
-                              </span>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  copyToClipboard(
-                                    "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
-                                  );
-                                  alert("Dirección Bitcoin copiada");
-                                }}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                            <p className="text-xs bg-white p-2 rounded border break-all">
-                              1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa
-                            </p>
-                          </div>
-
-                          <div>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="font-medium">USDT (TRC20):</span>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  copyToClipboard(
-                                    "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE"
-                                  );
-                                  alert("Dirección USDT copiada");
-                                }}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                            <p className="text-xs bg-white p-2 rounded border break-all">
-                              TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE
-                            </p>
-                          </div>
-
-                          <div>
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="font-medium">
-                                Ethereum (ETH):
-                              </span>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  copyToClipboard(
-                                    "0x742d35Cc6634C0532925a3b8D4020a2fDf0e9f"
-                                  );
-                                  alert("Dirección Ethereum copiada");
-                                }}
-                              >
-                                <Copy className="h-3 w-3" />
-                              </Button>
-                            </div>
-                            <p className="text-xs bg-white p-2 rounded border break-all">
-                              0x742d35Cc6634C0532925a3b8D4020a2fDf0e9f
-                            </p>
-                          </div>
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <Bitcoin className="h-5 w-5 text-yellow-600" />
+                          <span className="font-medium text-yellow-900">
+                            Pago con Criptomonedas
+                          </span>
+                        </div>
+                        <div className="mt-3 space-y-2 text-sm text-yellow-700">
+                          <p>
+                            <strong>Bitcoin (BTC):</strong>{" "}
+                            bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh
+                          </p>
+                          <p>
+                            <strong>USDT (TRC20):</strong>{" "}
+                            TQn9Y2khEsLMWD946u9T3fKXAE1muiF23Y
+                          </p>
+                          <p>
+                            <strong>Ethereum (ETH):</strong>{" "}
+                            0x742d35Cc6632C0532925a3b8D4C9db3C6e4C8b69
+                          </p>
+                          <p>
+                            <strong>Monto:</strong> ${bookingCalculations.total}{" "}
+                            USD
+                          </p>
                         </div>
                       </div>
 
-                      <div>
-                        <Label htmlFor="cryptoWallet">
-                          Tu Dirección de Wallet *
-                        </Label>
-                        <Input
-                          id="cryptoWallet"
-                          placeholder="Dirección de tu wallet desde donde enviaste"
-                          value={paymentDetails.cryptoWallet}
-                          onChange={(e) =>
-                            setPaymentDetails((prev) => ({
-                              ...prev,
-                              cryptoWallet: e.target.value,
-                            }))
-                          }
-                          className={
-                            errors.cryptoWallet ? "border-red-500" : ""
-                          }
-                        />
-                        {errors.cryptoWallet && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.cryptoWallet}
-                          </p>
-                        )}
-                      </div>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <Label htmlFor="cryptoWallet">
+                            Tu Dirección de Wallet
+                          </Label>
+                          <Input
+                            id="cryptoWallet"
+                            placeholder="Ej: bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+                            value={paymentDetails.cryptoWallet}
+                            onChange={(e) =>
+                              setPaymentDetails((prev) => ({
+                                ...prev,
+                                cryptoWallet: e.target.value,
+                              }))
+                            }
+                            className={
+                              errors.cryptoWallet ? "border-red-500" : ""
+                            }
+                          />
+                          {errors.cryptoWallet && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.cryptoWallet}
+                            </p>
+                          )}
+                        </div>
 
-                      <div>
-                        <Label htmlFor="cryptoTxHash">
-                          Hash de Transacción *
-                        </Label>
-                        <Input
-                          id="cryptoTxHash"
-                          placeholder="Hash de la transacción enviada"
-                          value={paymentDetails.cryptoTxHash}
-                          onChange={(e) =>
-                            setPaymentDetails((prev) => ({
-                              ...prev,
-                              cryptoTxHash: e.target.value,
-                            }))
-                          }
-                          className={
-                            errors.cryptoTxHash ? "border-red-500" : ""
-                          }
-                        />
-                        {errors.cryptoTxHash && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.cryptoTxHash}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-1">
-                          ID de transacción que aparece en tu wallet
-                        </p>
+                        <div>
+                          <Label htmlFor="cryptoTxHash">
+                            Hash de Transacción
+                          </Label>
+                          <Input
+                            id="cryptoTxHash"
+                            placeholder="Ej: 1a2b3c4d5e6f7g8h9i0j..."
+                            value={paymentDetails.cryptoTxHash}
+                            onChange={(e) =>
+                              setPaymentDetails((prev) => ({
+                                ...prev,
+                                cryptoTxHash: e.target.value,
+                              }))
+                            }
+                            className={
+                              errors.cryptoTxHash ? "border-red-500" : ""
+                            }
+                          />
+                          {errors.cryptoTxHash && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.cryptoTxHash}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* 💸 FORMULARIO DE ZELLE */}
+                  {/* Zelle */}
                   {selectedPaymentMethod === "zelle" && (
                     <div className="space-y-4">
-                      <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-                        <h4 className="font-semibold text-indigo-800 mb-2">
-                          Datos para Zelle
-                        </h4>
-                        <div className="space-y-2 text-sm text-indigo-700">
-                          <div className="flex justify-between">
-                            <span className="font-medium">Email:</span>
-                            <span>pagos@hotelparadise.com</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="font-medium">Nombre:</span>
-                            <span>Hotel Paradise LLC</span>
-                          </div>
+                      <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                        <div className="flex items-center space-x-2">
+                          <Send className="h-5 w-5 text-indigo-600" />
+                          <span className="font-medium text-indigo-900">
+                            Pago con Zelle
+                          </span>
                         </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="mt-3 w-full bg-transparent"
-                          onClick={() => {
-                            copyToClipboard("pagos@hotelparadise.com");
-                            alert("Email de Zelle copiado al portapapeles");
-                          }}
-                        >
-                          <Copy className="h-4 w-4 mr-2" />
-                          Copiar Email
-                        </Button>
+                        <div className="mt-3 space-y-2 text-sm text-indigo-700">
+                          <p>
+                            <strong>Email:</strong> payments@hotelparadise.com
+                          </p>
+                          <p>
+                            <strong>Nombre:</strong> Hotel Paradise LLC
+                          </p>
+                          <p>
+                            <strong>Monto:</strong> ${bookingCalculations.total}{" "}
+                            USD
+                          </p>
+                        </div>
                       </div>
 
-                      <div>
-                        <Label htmlFor="zelleEmail">Tu Email de Zelle *</Label>
-                        <Input
-                          id="zelleEmail"
-                          type="email"
-                          placeholder="tu-email@ejemplo.com"
-                          value={paymentDetails.zelleEmail}
-                          onChange={(e) =>
-                            setPaymentDetails((prev) => ({
-                              ...prev,
-                              zelleEmail: e.target.value,
-                            }))
-                          }
-                          className={errors.zelleEmail ? "border-red-500" : ""}
-                        />
-                        {errors.zelleEmail && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.zelleEmail}
-                          </p>
-                        )}
-                      </div>
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <Label htmlFor="zelleEmail">Tu Email de Zelle</Label>
+                          <Input
+                            id="zelleEmail"
+                            type="email"
+                            placeholder="tu-email@ejemplo.com"
+                            value={paymentDetails.zelleEmail}
+                            onChange={(e) =>
+                              setPaymentDetails((prev) => ({
+                                ...prev,
+                                zelleEmail: e.target.value,
+                              }))
+                            }
+                            className={
+                              errors.zelleEmail ? "border-red-500" : ""
+                            }
+                          />
+                          {errors.zelleEmail && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.zelleEmail}
+                            </p>
+                          )}
+                        </div>
 
-                      <div>
-                        <Label htmlFor="zelleReference">
-                          Número de Confirmación *
-                        </Label>
-                        <Input
-                          id="zelleReference"
-                          placeholder="Número de confirmación de Zelle"
-                          value={paymentDetails.zelleReference}
-                          onChange={(e) =>
-                            setPaymentDetails((prev) => ({
-                              ...prev,
-                              zelleReference: e.target.value,
-                            }))
-                          }
-                          className={
-                            errors.zelleReference ? "border-red-500" : ""
-                          }
-                        />
-                        {errors.zelleReference && (
-                          <p className="text-sm text-red-500 mt-1">
-                            {errors.zelleReference}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-1">
-                          Número que aparece en tu confirmación de Zelle
-                        </p>
+                        <div>
+                          <Label htmlFor="zelleReference">
+                            Número de Confirmación
+                          </Label>
+                          <Input
+                            id="zelleReference"
+                            placeholder="Ej: ZEL123456789"
+                            value={paymentDetails.zelleReference}
+                            onChange={(e) =>
+                              setPaymentDetails((prev) => ({
+                                ...prev,
+                                zelleReference: e.target.value,
+                              }))
+                            }
+                            className={
+                              errors.zelleReference ? "border-red-500" : ""
+                            }
+                          />
+                          {errors.zelleReference && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.zelleReference}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -2027,29 +2131,28 @@ export const BookingWidget = ({
                 </div>
               )}
 
-              {/* ✅ PASO 3: INFORMACIÓN DEL HUÉSPED */}
+              {/* PASO 3: INFORMACIÓN DEL HUÉSPED */}
               {paymentStep === "guest" && (
                 <div className="space-y-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="bg-red-100 text-red-600 rounded-full p-3">
-                      <Users className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center space-x-2">
+                      <Users className="h-5 w-5 text-green-600" />
+                      <span className="font-medium text-green-900">
                         Información del Huésped Principal
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        Datos necesarios para la reserva
-                      </p>
+                      </span>
                     </div>
+                    <p className="text-sm text-green-700 mt-1">
+                      Esta información será utilizada para el registro y
+                      contacto.
+                    </p>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4">
                     <div>
                       <Label htmlFor="guestName">Nombre Completo *</Label>
                       <Input
                         id="guestName"
-                        placeholder="Ej: Juan Carlos Pérez"
+                        placeholder="Juan Pérez"
                         value={guestInfo.name}
                         onChange={(e) =>
                           setGuestInfo((prev) => ({
@@ -2060,18 +2163,18 @@ export const BookingWidget = ({
                         className={errors.name ? "border-red-500" : ""}
                       />
                       {errors.name && (
-                        <p className="text-sm text-red-500 mt-1">
+                        <p className="text-red-500 text-sm mt-1">
                           {errors.name}
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <Label htmlFor="guestEmail">Correo Electrónico *</Label>
+                      <Label htmlFor="guestEmail">Email *</Label>
                       <Input
                         id="guestEmail"
                         type="email"
-                        placeholder="ejemplo@correo.com"
+                        placeholder="juan@ejemplo.com"
                         value={guestInfo.email}
                         onChange={(e) =>
                           setGuestInfo((prev) => ({
@@ -2082,17 +2185,17 @@ export const BookingWidget = ({
                         className={errors.email ? "border-red-500" : ""}
                       />
                       {errors.email && (
-                        <p className="text-sm text-red-500 mt-1">
+                        <p className="text-red-500 text-sm mt-1">
                           {errors.email}
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <Label htmlFor="guestPhone">Número de Teléfono *</Label>
+                      <Label htmlFor="guestPhone">Teléfono *</Label>
                       <Input
                         id="guestPhone"
-                        placeholder="Ej: +58 414-123-4567"
+                        placeholder="0414-123-4567"
                         value={guestInfo.phone}
                         onChange={(e) =>
                           setGuestInfo((prev) => ({
@@ -2103,7 +2206,7 @@ export const BookingWidget = ({
                         className={errors.phone ? "border-red-500" : ""}
                       />
                       {errors.phone && (
-                        <p className="text-sm text-red-500 mt-1">
+                        <p className="text-red-500 text-sm mt-1">
                           {errors.phone}
                         </p>
                       )}
@@ -2115,7 +2218,7 @@ export const BookingWidget = ({
                       </Label>
                       <Input
                         id="guestDocument"
-                        placeholder="Ej: V-12345678 o E-12345678"
+                        placeholder="V-12.345.678 o E-12345678"
                         value={guestInfo.document}
                         onChange={(e) =>
                           setGuestInfo((prev) => ({
@@ -2126,7 +2229,7 @@ export const BookingWidget = ({
                         className={errors.document ? "border-red-500" : ""}
                       />
                       {errors.document && (
-                        <p className="text-sm text-red-500 mt-1">
+                        <p className="text-red-500 text-sm mt-1">
                           {errors.document}
                         </p>
                       )}
@@ -2134,9 +2237,9 @@ export const BookingWidget = ({
 
                     <div>
                       <Label htmlFor="guestNotes">
-                        Notas Adicionales (Opcional)
+                        Comentarios Adicionales (Opcional)
                       </Label>
-                      <Input
+                      <textarea
                         id="guestNotes"
                         placeholder="Solicitudes especiales, alergias, etc."
                         value={guestInfo.notes}
@@ -2146,38 +2249,46 @@ export const BookingWidget = ({
                             notes: e.target.value,
                           }))
                         }
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+                        rows={3}
                       />
                     </div>
+                  </div>
 
-                    <div className="bg-gray-50 p-4 rounded-lg border">
-                      <div className="flex items-start space-x-3">
-                        <input
-                          type="checkbox"
-                          id="termsAccepted"
-                          checked={termsAccepted}
-                          onChange={(e) => setTermsAccepted(e.target.checked)}
-                          className="mt-1"
-                        />
-                        <label
-                          htmlFor="termsAccepted"
-                          className="text-sm text-gray-700 flex-1"
-                        >
+                  {/* Términos y Condiciones */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <div className="flex items-start space-x-3">
+                      <input
+                        type="checkbox"
+                        id="terms"
+                        checked={termsAccepted}
+                        onChange={(e) => setTermsAccepted(e.target.checked)}
+                        className="mt-1 h-4 w-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                      />
+                      <div className="text-sm">
+                        <label htmlFor="terms" className="text-gray-700">
                           Acepto los{" "}
-                          <span className="text-red-600 underline cursor-pointer">
+                          <a
+                            href="#"
+                            className="text-red-600 hover:text-red-700 underline"
+                          >
                             términos y condiciones
-                          </span>{" "}
-                          del hotel, así como las{" "}
-                          <span className="text-red-600 underline cursor-pointer">
-                            políticas de cancelación
-                          </span>
+                          </a>{" "}
+                          y la{" "}
+                          <a
+                            href="#"
+                            className="text-red-600 hover:text-red-700 underline"
+                          >
+                            política de privacidad
+                          </a>
                           .
                         </label>
+                        {errors.terms && (
+                          <p className="text-red-500 text-sm mt-1">
+                            {errors.terms}
+                          </p>
+                        )}
                       </div>
-                      {errors.terms && (
-                        <p className="text-sm text-red-500 mt-2 ml-6">
-                          {errors.terms}
-                        </p>
-                      )}
                     </div>
                   </div>
 
@@ -2191,50 +2302,95 @@ export const BookingWidget = ({
                 </div>
               )}
 
-              {/* ✅ PASO 4: CONFIRMACIÓN DE RESERVA */}
+              {/* PASO 4: CONFIRMACIÓN EXITOSA */}
               {paymentStep === "success" && (
                 <div className="text-center space-y-6">
                   <div className="flex justify-center">
-                    <div className="bg-green-100 rounded-full p-6">
-                      <CheckCircle className="h-16 w-16 text-green-600" />
+                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                      <CheckCircle className="h-12 w-12 text-green-600" />
                     </div>
                   </div>
 
                   <div>
-                    <h3 className="text-2xl font-bold text-green-800 mb-2">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
                       ¡Reserva Confirmada!
                     </h3>
-                    <p className="text-gray-600 mb-4">
-                      Tu reserva ha sido procesada exitosamente
+                    <p className="text-gray-600">
+                      Tu reserva ha sido procesada exitosamente. Recibirás un
+                      email de confirmación en breve.
                     </p>
-                    <div className="bg-gray-50 rounded-lg p-4 text-left">
-                      <h4 className="font-semibold text-gray-800 mb-2">
-                        Detalles de la Reserva:
-                      </h4>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <p>
-                          <strong>ID de Reserva:</strong> {bookingId}
-                        </p>
-                        <p>
-                          <strong>Check-in:</strong> {formatDate(checkIn)}
-                        </p>
-                        <p>
-                          <strong>Check-out:</strong> {formatDate(checkOut)}
-                        </p>
-                        <p>
-                          <strong>Huéspedes:</strong> {guests}
-                        </p>
-                        <p>
-                          <strong>Total:</strong> ${bookingCalculations.total}
-                        </p>
-                        <p>
-                          <strong>Método de Pago:</strong>{" "}
-                          {
-                            paymentMethods.find(
-                              (m) => m.id === selectedPaymentMethod
-                            )?.name
-                          }
-                        </p>
+                  </div>
+
+                  {/* Detalles de la reserva confirmada */}
+                  <div className="bg-gray-50 rounded-lg p-6 text-left">
+                    <h4 className="font-semibold text-gray-900 mb-4">
+                      Detalles de tu Reserva:
+                    </h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">
+                          Número de Reserva:
+                        </span>
+                        <span className="font-medium">
+                          #
+                          {Math.random()
+                            .toString(36)
+                            .substr(2, 9)
+                            .toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Check-in:</span>
+                        <span className="font-medium">
+                          {checkIn ? formatDateShort(checkIn) : ""}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Check-out:</span>
+                        <span className="font-medium">
+                          {checkOut ? formatDateShort(checkOut) : ""}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Huéspedes:</span>
+                        <span className="font-medium">
+                          {guests}{" "}
+                          {parseInt(guests) === 1 ? "Huésped" : "Huéspedes"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Noches:</span>
+                        <span className="font-medium">
+                          {bookingCalculations.nights}
+                        </span>
+                      </div>
+                      <div className="border-t border-gray-200 pt-3">
+                        <div className="flex justify-between font-bold text-lg">
+                          <span>Total Pagado:</span>
+                          <span className="text-green-600">
+                            ${bookingCalculations.total}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Información importante */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start space-x-3">
+                      <InfoIcon className="h-5 w-5 text-blue-600 mt-0.5" />
+                      <div className="text-left">
+                        <h4 className="font-medium text-blue-900 mb-2">
+                          Información Importante:
+                        </h4>
+                        <ul className="text-sm text-blue-700 space-y-1">
+                          <li>• Check-in: 3:00 PM - 11:00 PM</li>
+                          <li>• Check-out: 7:00 AM - 12:00 PM</li>
+                          <li>
+                            • Presenta tu documento de identidad al llegar
+                          </li>
+                          <li>• Política de cancelación: 24 horas antes</li>
+                        </ul>
                       </div>
                     </div>
                   </div>
@@ -2242,104 +2398,81 @@ export const BookingWidget = ({
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Button
                       onClick={() => {
-                        const bookingDetails = `
-Reserva Confirmada - Hotel Paradise
-
-ID de Reserva: ${bookingId}
-Check-in: ${formatDate(checkIn)}
-Check-out: ${formatDate(checkOut)}
-Huéspedes: ${guests}
-Noches: ${bookingCalculations.nights}
-Total: $${bookingCalculations.total}
-Método de Pago: ${
-                          paymentMethods.find(
-                            (m) => m.id === selectedPaymentMethod
-                          )?.name
-                        }
-
-Huésped Principal:
-Nombre: ${guestInfo.name}
-Email: ${guestInfo.email}
-Teléfono: ${guestInfo.phone}
-                        `.trim();
-
-                        if (navigator.share) {
-                          navigator.share({
-                            title: "Confirmación de Reserva",
-                            text: bookingDetails,
-                          });
-                        } else {
-                          copyToClipboard(bookingDetails);
-                          alert("Detalles copiados al portapapeles");
-                        }
-                      }}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Compartir
-                    </Button>
-
-                    <Button
-                      onClick={() => {
-                        const element = document.createElement("a");
-                        const bookingDetails = `
-Reserva Confirmada - Hotel Paradise
-
-ID de Reserva: ${bookingId}
-Fecha de Reserva: ${format(new Date(), "dd/MM/yyyy HH:mm")}
-
-DETALLES DE LA ESTADÍA:
-Check-in: ${formatDate(checkIn)}
-Check-out: ${formatDate(checkOut)}
-Número de Huéspedes: ${guests}
-Número de Noches: ${bookingCalculations.nights}
-
-DESGLOSE DE PRECIOS:
-Subtotal (${bookingCalculations.nights} noches × $${pricePerNight}): $${
-                          bookingCalculations.subtotal
-                        }
-Impuestos y Tasas: $${bookingCalculations.taxes}
-TOTAL: $${bookingCalculations.total}
-
-MÉTODO DE PAGO:
-${paymentMethods.find((m) => m.id === selectedPaymentMethod)?.name}
-
-INFORMACIÓN DEL HUÉSPED:
-Nombre: ${guestInfo.name}
-Email: ${guestInfo.email}
-Teléfono: ${guestInfo.phone}
-Documento: ${guestInfo.document}
-
-¡Gracias por elegir Hotel Paradise!
-                        `.trim();
-
-                        const file = new Blob([bookingDetails], {
-                          type: "text/plain",
-                        });
-                        element.href = URL.createObjectURL(file);
-                        element.download = `reserva-${bookingId}.txt`;
-                        document.body.appendChild(element);
-                        element.click();
-                        document.body.removeChild(element);
+                        // Aquí podrías generar un PDF o enviar por email
+                        alert(
+                          "Función de descarga de comprobante en desarrollo"
+                        );
                       }}
                       variant="outline"
                       className="flex-1"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Descargar
+                      Descargar Comprobante
+                    </Button>
+                    <Button
+                      onClick={closePaymentModal}
+                      className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                    >
+                      Cerrar
                     </Button>
                   </div>
-
-                  <Button
-                    onClick={closePaymentModal}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white py-3"
-                  >
-                    Cerrar
-                  </Button>
                 </div>
               )}
             </div>
+
+            {/* Resumen de reserva lateral (solo visible en pasos 1-3) */}
+            {paymentStep !== "success" && (
+              <div className="border-t border-gray-200 p-6 bg-gray-50">
+                <h3 className="font-semibold text-gray-900 mb-4">
+                  Resumen de Reserva
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Habitación:</span>
+                    <span className="font-medium">Suite Premium</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Fechas:</span>
+                    <span className="font-medium">
+                      {checkIn && checkOut
+                        ? `${formatDateShort(checkIn)} - ${formatDateShort(
+                            checkOut
+                          )}`
+                        : "No seleccionadas"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Huéspedes:</span>
+                    <span className="font-medium">
+                      {guests}{" "}
+                      {parseInt(guests) === 1 ? "Huésped" : "Huéspedes"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Noches:</span>
+                    <span className="font-medium">
+                      {bookingCalculations.nights}
+                    </span>
+                  </div>
+                  <div className="border-t border-gray-200 pt-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Subtotal:</span>
+                      <span>${bookingCalculations.subtotal}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Impuestos:</span>
+                      <span>${bookingCalculations.taxes}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-lg border-t border-gray-200 pt-2 mt-2">
+                      <span>Total:</span>
+                      <span className="text-red-600">
+                        ${bookingCalculations.total}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
