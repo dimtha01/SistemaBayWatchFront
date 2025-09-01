@@ -14,6 +14,8 @@ import RoomDetailsPage from "@/pages/RoomDetailsPage";
 import { FullMenuPage } from "@/pages/FullMenuPage";
 import { AboutUsGaleryPage } from "@/pages/AboutUsGaleryPage";
 import { LoginPage } from "@/pages/LoginPage";
+import { DashboardLayout } from "@/layouts/DashboardLayout";
+import { DashboardPage } from "@/pages/DashboardPage";
 
 // Configuración de rutas
 export const router = createBrowserRouter([
@@ -74,6 +76,18 @@ export const router = createBrowserRouter([
       {
         path: "aboutUsGalery",
         element: <AboutUsGaleryPage />,
+      },
+    ],
+  },
+  {
+    path: "/dashboard",
+    element: <DashboardLayout />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "/dashboard-",
+        element: <DashboardPage />,
+        index: true,
       },
     ],
   },
