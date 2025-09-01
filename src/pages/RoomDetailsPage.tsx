@@ -172,7 +172,7 @@ const RoomDetailsPage = () => {
 
             <div className="lg:col-span-1">
               <BookingWidget
-                roomId={roomId}
+                roomId={`${roomId}`}
                 pricePerNight={roomData.roomType.basePrice}
                 onBooking={handleBooking}
                 maxGuests={roomData?.roomType.maxCapacity || 4}

@@ -6,7 +6,6 @@ export const useRoomBooking = () => {
     (
       data: BookingData,
       roomName: string,
-      setIsModalOpen: (open: boolean) => void
     ) => {
       console.log("Reserva realizada:", data);
 
@@ -18,7 +17,6 @@ export const useRoomBooking = () => {
         });
 
         // Cerrar modal después de la reserva exitosa
-        setIsModalOpen(false);
       } catch (error) {
         console.error("Error al procesar la reserva:", error);
       }

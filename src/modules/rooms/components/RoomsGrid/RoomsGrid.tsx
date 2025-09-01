@@ -26,6 +26,7 @@ export const RoomsGrid = ({ rooms, loading, error, itemsPerPage, onRetry, onClea
       console.log("Primera habitación:", rooms);
     }
   }, [rooms, loading, error]);
+console.log(rooms);
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-6 sm:mb-8">
@@ -40,7 +41,7 @@ export const RoomsGrid = ({ rooms, loading, error, itemsPerPage, onRetry, onClea
         // Mostrar habitaciones reales - usando solo el ID como key
         rooms.map((room) => (
           <RoomCard
-            key={`room-${room.id}`} // Usar solo el ID como key, sin Math.random()
+            key={`${room.id}`} // Usar solo el ID como key, sin Math.random()
             id={room.id}
             name={room.name}
             price={room.price}

@@ -17,7 +17,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
   CreditCard,
@@ -31,12 +30,9 @@ import {
   Calendar as CalendarIcon,
   Users,
   Shield,
-  Copy,
   AlertCircle,
   X,
-  Share2,
   Download,
-  Info,
   InfoIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -58,7 +54,7 @@ interface BookingWidgetProps {
     status?: "confirmed" | "pending" | "checkout";
   }[];
   // 🆕 NUEVO PARÁMETRO PARA EL ID DE LA HABITACIÓN
-  roomId: number;
+  roomId: string;
 }
 
 interface BookingData {
@@ -152,7 +148,6 @@ export const BookingWidget = ({
     "method" | "details" | "guest" | "success"
   >("method");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [bookingId, setBookingId] = useState("");
   const [dateErrors, setDateErrors] = useState<{ [key: string]: string }>({});
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isValidBooking, setIsValidBooking] = useState(false);
@@ -460,45 +455,7 @@ useEffect(() => {
 
   // ✅ VALIDACIÓN DE FECHAS ACTUALIZADA
  // ✅ REEMPLAZAR validateDates COMPLETAMENTE
-const validateDates = useCallback(
-  (checkInDate: Date | undefined, checkOutDate: Date | undefined) => {
-    if (!checkInDate || !checkOutDate) return true;
 
-    const newDateErrors: { [key: string]: string } = {};
-
-    // Validar que check-in no esté deshabilitado
-    if (isDateDisabled(checkInDate)) {
-      newDateErrors.checkIn = "Fecha de check-in no disponible";
-    }
-
-    // Validar que no haya fechas deshabilitadas en el rango
-    const start = new Date(checkInDate);
-    const end = new Date(checkOutDate);
-
-    for (
-      let date = new Date(start);
-      date < end;
-      date.setDate(date.getDate() + 1)
-    ) {
-      if (isDateDisabled(date)) {
-        newDateErrors.checkOut = "Tu estadía incluye fechas no disponibles";
-        break;
-      }
-    }
-
-    // Solo actualizar si hay cambios
-    const hasErrors = Object.keys(newDateErrors).length > 0;
-    const currentHasErrors = Object.keys(dateErrors).length > 0;
-    
-    if (hasErrors !== currentHasErrors || 
-        JSON.stringify(newDateErrors) !== JSON.stringify(dateErrors)) {
-      setDateErrors(newDateErrors);
-    }
-
-    return !hasErrors;
-  },
-  [isDateDisabled, dateErrors] // ← Dependencias específicas
-);
 
 
   // ✅ CÁLCULOS DE RESERVA ACTUALIZADOS
@@ -626,18 +583,10 @@ const handleCheckOutSelect = useCallback(
       .toUpperCase()}`;
   }, []);
 
-  const formatDate = useCallback((date: Date | undefined) => {
-    if (!date) return "";
-    return format(date, "dd 'de' MMMM, yyyy", { locale: es });
-  }, []);
 
   const formatDateShort = useCallback((date: Date | undefined) => {
     if (!date) return "";
     return format(date, "dd/MM/yyyy");
-  }, []);
-
-  const copyToClipboard = useCallback((text: string) => {
-    navigator.clipboard.writeText(text);
   }, []);
 
   // ✅ HANDLE SUBMIT CON VALIDACIÓN CRÍTICA
@@ -778,7 +727,6 @@ const handleCheckOutSelect = useCallback(
       setPaymentStep("guest");
     } else if (paymentStep === "guest" && validateGuestInfo()) {
       const newBookingId = generateBookingId();
-      setBookingId(newBookingId);
 
       const bookingData: BookingData = {
         id: newBookingId,
@@ -841,7 +789,6 @@ const handleCheckOutSelect = useCallback(
     setSelectedPaymentMethod("");
     setErrors({});
     setDateErrors({});
-    setBookingId("");
     setTermsAccepted(false);
     setIsValidBooking(false);
   }, []);
