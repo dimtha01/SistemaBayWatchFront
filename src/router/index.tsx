@@ -14,6 +14,9 @@ import RoomDetailsPage from "@/pages/RoomDetailsPage";
 import { FullMenuPage } from "@/pages/FullMenuPage";
 import { AboutUsGaleryPage } from "@/pages/AboutUsGaleryPage";
 import { LoginPage } from "@/pages/LoginPage";
+import { DashboardLayout } from "@/layouts/DashboardLayout";
+import { DashboardPage } from "@/pages/DashboardPage";
+import { ExperienceDetailsPage } from "@/pages/ExperienceDetailsPage";
 
 // Configuración de rutas
 export const router = createBrowserRouter([
@@ -60,12 +63,12 @@ export const router = createBrowserRouter([
         element: <RegisterPage />,
       },
       {
-        path: "register",
-        element: <RegisterPage />,
-      },
-      {
         path: "roomsDetails/:id",
         element: <RoomDetailsPage />,
+      },
+      {
+        path: "experiences/:id?", // Corregido typo + opcional
+        element: <ExperienceDetailsPage />,
       },
       {
         path: "fullMenu",
@@ -74,6 +77,18 @@ export const router = createBrowserRouter([
       {
         path: "aboutUsGalery",
         element: <AboutUsGaleryPage />,
+      },
+    ],
+  },
+  {
+    path: "/dashboard",
+    element: <DashboardLayout />,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "/dashboard",
+        element: <DashboardPage />,
+        index: true,
       },
     ],
   },
