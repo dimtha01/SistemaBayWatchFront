@@ -95,11 +95,28 @@ export interface ReservedPeriod {
 }
 
 export interface BookingData {
+  id: string;
   checkIn: string;
   checkOut: string;
   guests: number;
-  totalPrice: number;
   nights: number;
+  pricePerNight: number;
+  subtotal: number;
+  taxes: number;
+  serviceFee: number;
+  cleaningFee: number;
+  total: number;
+  bookingDate: string;
+  status: "pending" | "confirmed" | "cancelled";
+  paymentMethod: string;
+  paymentDetails?: any;
+  guestInfo?: {
+    name: string;
+    email: string;
+    phone: string;
+    document?: string;
+    notes?: string;
+  };
 }
 
 export interface ViewIconsMap {

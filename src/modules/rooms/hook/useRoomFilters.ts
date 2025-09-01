@@ -33,15 +33,12 @@ export const useRoomFilters = () => {
 
   const loadRoomsWithFilters = useCallback(
     async (filters?: Partial<RoomFiltersType>) => {
-      console.log("[v0] loadRoomsWithFilters called with filters:", filters);
       setFilterLoading(true);
       try {
         const roomsData = await fetchRooms(filters);
-        console.log("[v0] fetchRooms returned:", roomsData.length, "rooms");
         setRooms(roomsData);
         setFilteredRooms(roomsData);
         console.log(
-          "[v0] filteredRooms updated with:",
           roomsData.length,
           "rooms"
         );
@@ -58,7 +55,6 @@ export const useRoomFilters = () => {
 
   // Load initial data only once on mount
   useEffect(() => {
-    console.log("[v0] Initial load of rooms");
     loadRoomsWithFilters();
   }, []); // Empty dependency array to run only once
 
@@ -107,12 +103,7 @@ export const useRoomFilters = () => {
         setViewOptions(viewsWithIcons);
       } catch (error) {
         console.error("Failed to load room views:", error);
-        setViewOptions([
-          { value: "Ocean", label: "Océano", icon: "🌊" },
-          { value: "City", label: "Ciudad", icon: "🏢" },
-          { value: "Garden", label: "Jardín", icon: "🌿" },
-          { value: "Mountain", label: "Montaña", icon: "⛰️" },
-        ]);
+        setViewOptions([]);
       } finally {
         setViewsLoading(false);
       }

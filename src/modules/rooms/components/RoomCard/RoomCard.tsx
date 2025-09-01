@@ -27,11 +27,9 @@ import {
   VIEW_ICONS,
   VIEW_LABELS,
   DEFAULT_BOOKING_CONFIG,
-  DEFAULT_UNAVAILABLE_DATES,
-  DEFAULT_RESERVED_PERIODS,
 } from "../../utils/room-card.constants";
 import { useEffect, useState, type ReactNode } from "react";
-import { BookingWidget } from "@/modules/booking/components";
+import BookingWidget from "@/components/RoomDetails/BookingWidget";
 
 export const RoomCard = ({
   id,
@@ -64,14 +62,11 @@ export const RoomCard = ({
   const { handleBooking } = useRoomBooking();
   const { getAmenityIcon } = useAmenityIcons();
 
-  const pricePerNight = 650;
 
   const bookingConfig = DEFAULT_BOOKING_CONFIG;
-  const unavailableDates = DEFAULT_UNAVAILABLE_DATES;
-  const reservedPeriods = DEFAULT_RESERVED_PERIODS;
 
   const onBookingSubmit = (data: BookingData) => {
-    handleBooking(data, name, setIsModalOpen);
+    handleBooking(data, name);
   };
 
   // Estado para almacenar los iconos de las amenidades
@@ -89,7 +84,7 @@ export const RoomCard = ({
 
     loadIcons();
   }, [amenities, getAmenityIcon]);
-  console.log(amenities)
+  console.log(amenities);
 
   return (
     <Card
@@ -311,7 +306,7 @@ export const RoomCard = ({
                       {rating && (
                         <span className="flex items-center gap-1">
                           <Star className="w-4 h-4 fill-current" />
-                          {rating.toFixed(1)} ({reviewCount} reseñas)
+                          {rating.toFixed(1)})
                         </span>
                       )}
                     </DialogDescription>
@@ -335,7 +330,7 @@ export const RoomCard = ({
                       </div>
                       <div className="flex items-center gap-2">
                         <Bed className="w-4 h-4 text-[#F20C0C]" />
-                        <span>Cama: {bedType}</span>
+                        <span>{bedType}</span>
                       </div>
                       <div className="flex items-center gap-2 col-span-2">
                         {VIEW_ICONS[view]}
@@ -422,13 +417,12 @@ export const RoomCard = ({
                   <div className="sticky top-6">
                     <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-1">
                       <BookingWidget
-                        pricePerNight={pricePerNight}
+                        roomId={id}
+                        pricePerNight={price}
                         onBooking={onBookingSubmit}
                         maxGuests={bookingConfig.maxGuests}
                         minNights={bookingConfig.minNights}
                         maxNights={bookingConfig.maxNights}
-                        unavailableDates={unavailableDates}
-                        reservedPeriods={reservedPeriods}
                       />
                     </div>
                   </div>
