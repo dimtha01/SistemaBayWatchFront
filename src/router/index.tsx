@@ -18,6 +18,8 @@ import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { ExperienceDetailsPage } from "@/pages/ExperienceDetailsPage";
 import { MainteincePage } from "@/pages/MainteincePage";
+import { RoomsPage } from "@/pages/RoomsPage";
+import { ReservasLayout } from "@/layouts/ReservasLayout"
 
 // Configuración de rutas
 export const router = createBrowserRouter([
@@ -86,14 +88,25 @@ export const router = createBrowserRouter([
     element: <DashboardLayout />,
     errorElement: <ErrorPage />,
     children: [
-      // {
-      //   path: "/dashboard",
-      //   element: <DashboardPage />,
-      //   index: true,
-      // },
       {
         path: "/dashboard",
+        element: <DashboardPage />,
+        index: true,
+      },
+      {
+        path: "/dashboard/mantenimiento",
         element: <MainteincePage />,
+      },
+    ],
+  },
+  {
+    path: "/reservas",
+    element: <ReservasLayout/>,
+    errorElement: <ErrorPage />,
+    children: [
+      {
+        path: "/reservas",
+        element: <RoomsPage />,
         index: true,
       },
     ],
