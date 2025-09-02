@@ -1,5 +1,5 @@
 import React from 'react';
-import { RoomsManagement } from '../modules/Reservas/components/RoomsManagement';
+import { RoomsManagement } from '../modules/GestionHotel/components/RoomsManagement';
 
 export const RoomsPage: React.FC = () => {
   return (

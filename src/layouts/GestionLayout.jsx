@@ -1,12 +1,12 @@
-import { SiteHeader } from "../modules/Reservas/ui/site_header"
+import { SiteHeader } from "../modules/GestionHotel/ui/site_header"
 import {
     SidebarInset,
     SidebarProvider,
 } from "@/components/ui/sidebar"
-import { AppSidebar } from "../modules/Reservas/ui/app-sidebar"
+import { AppSidebar } from "../modules/GestionHotel/ui/app-sidebar"
 import { Outlet } from "react-router-dom";
 
-export const ReservasLayout = () => {
+export const GestionLayout = () => {
     return (
         <SidebarProvider
             style={

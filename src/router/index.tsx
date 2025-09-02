@@ -19,7 +19,7 @@ import { DashboardPage } from "@/pages/DashboardPage";
 import { ExperienceDetailsPage } from "@/pages/ExperienceDetailsPage";
 import { MainteincePage } from "@/pages/MainteincePage";
 import { RoomsPage } from "@/pages/RoomsPage";
-import { ReservasLayout } from "@/layouts/ReservasLayout"
+import { GestionLayout } from "@/layouts/GestionLayout"
 
 // Configuración de rutas
 export const router = createBrowserRouter([
@@ -100,12 +100,12 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: "/reservas",
-    element: <ReservasLayout/>,
+    path: "/Gestion",
+    element: <GestionLayout/>,
     errorElement: <ErrorPage />,
     children: [
       {
-        path: "/reservas",
+        path: "/Gestion",
         element: <RoomsPage />,
         index: true,
       },
