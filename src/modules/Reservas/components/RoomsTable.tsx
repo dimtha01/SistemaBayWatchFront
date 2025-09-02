@@ -188,7 +188,7 @@ export const RoomsTable: React.FC<RoomsTableProps> = ({
   const [data, setData] = useState(() => rooms);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: 5,
   });
 
   // Actualizar data cuando cambien las rooms

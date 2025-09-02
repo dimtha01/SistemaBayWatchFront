@@ -77,7 +77,7 @@ export const RoomsManagement: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Page Header */}
       <div className="bg-[#0D0D0D]/80 backdrop-blur-sm border border-[#8C0303]/30 rounded-xl p-6">
         <div className="flex flex-wrap justify-between items-center gap-4">
