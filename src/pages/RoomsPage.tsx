@@ -93,7 +93,7 @@ function DraggableRow({ row, children }: { row: Row<Room>, children: React.React
       ref={setNodeRef}
       className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
         isDragging ? 'opacity-80 z-10 shadow-lg' : ''
-      } ${row.getIsSelected() ? 'bg-red-50' : ''}`}
+      }`}
       style={{
         transform: CSS.Transform.toString(transform),
         transition: transition,
@@ -183,11 +183,15 @@ export const RoomsPage: React.FC = () => {
     isOpen: false,
     room: null
   });
+  // ✅ Nuevo estado para modal de mantenimiento
+  const [maintenanceModal, setMaintenanceModal] = useState<{ isOpen: boolean; room: Room | null }>({
+    isOpen: false,
+    room: null
+  });
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
   
-  // ✅ Estados para la tabla avanzada
-  const [rowSelection, setRowSelection] = useState({})
+  // ✅ Estados simplificados para la tabla (sin selección)
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
@@ -229,41 +233,12 @@ export const RoomsPage: React.FC = () => {
     setFilteredRooms(filtered);
   }, [rooms, filters]);
 
-  // ✅ Definición de columnas para la tabla avanzada
+  // ✅ Definición de columnas simplificada (sin selección)
   const columns: ColumnDef<Room>[] = [
     {
       id: "drag",
       header: () => null,
       cell: ({ row }) => <DragHandle id={row.original.id} />,
-      size: 50,
-    },
-    {
-      id: "select",
-      header: ({ table }) => (
-        <div className="flex items-center justify-center">
-          <input
-            type="checkbox"
-            className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-            checked={
-              table.getIsAllPageRowsSelected() ||
-              (table.getIsSomePageRowsSelected())
-            }
-            onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
-          />
-        </div>
-      ),
-      cell: ({ row }) => (
-        <div className="flex items-center justify-center">
-          <input
-            type="checkbox"
-            className="rounded border-gray-300 text-red-600 focus:ring-red-500"
-            checked={row.getIsSelected()}
-            onChange={(e) => row.toggleSelected(e.target.checked)}
-          />
-        </div>
-      ),
-      enableSorting: false,
-      enableHiding: false,
       size: 50,
     },
     {
@@ -342,7 +317,7 @@ export const RoomsPage: React.FC = () => {
             <Edit className="w-4 h-4" />
           </button>
           <button
-            onClick={() => toggleMaintenance(row.original)}
+            onClick={() => setMaintenanceModal({ isOpen: true, room: row.original })}
             className={`p-2 rounded-lg transition-colors ${
               row.original.status === 'Mantenimiento' 
                 ? 'text-green-600 hover:bg-green-50' 
@@ -364,20 +339,17 @@ export const RoomsPage: React.FC = () => {
     },
   ]
 
-  // ✅ Configuración de la tabla
+  // ✅ Configuración de la tabla simplificada
   const table = useReactTable({
     data: filteredRooms,
     columns,
     state: {
       sorting,
       columnVisibility,
-      rowSelection,
       columnFilters,
       pagination,
     },
     getRowId: (row) => row.id.toString(),
-    enableRowSelection: true,
-    onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
@@ -479,7 +451,7 @@ export const RoomsPage: React.FC = () => {
     }));
   };
 
-  // ✅ Nueva función para toggle de mantenimiento
+  // ✅ Nueva función para toggle de mantenimiento con confirmación
   const toggleMaintenance = (room: Room) => {
     const newStatus = room.status === 'Mantenimiento' ? 'Disponible' : 'Mantenimiento';
     setRooms(prev => prev.map(r => 
@@ -493,6 +465,7 @@ export const RoomsPage: React.FC = () => {
       : `✅ ${room.name} disponible nuevamente`;
     
     showNotification(message);
+    setMaintenanceModal({ isOpen: false, room: null });
   };
 
   // ✅ Nueva función para poner en mantenimiento desde el modal
@@ -660,13 +633,12 @@ export const RoomsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ✅ Tabla Única - Vista Avanzada */}
+      {/* ✅ Tabla Única - Vista Avanzada Simplificada */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">
-              {table.getFilteredSelectedRowModel().rows.length} de{" "}
-              {table.getFilteredRowModel().rows.length} habitación(es) seleccionada(s)
+              {table.getFilteredRowModel().rows.length} habitación(es) encontrada(s)
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -697,7 +669,7 @@ export const RoomsPage: React.FC = () => {
                       <th
                         key={header.id}
                         className="px-6 py-4 text-left text-gray-900 text-sm font-semibold"
-                                                style={{ width: header.getSize() }}
+                        style={{ width: header.getSize() }}
                       >
                         {header.isPlaceholder
                           ? null
@@ -721,7 +693,7 @@ export const RoomsPage: React.FC = () => {
                         {row.getVisibleCells().map((cell) => (
                           <td key={cell.id} className="px-6 py-4">
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
+                                                    </td>
                         ))}
                       </DraggableRow>
                     ))}
@@ -1164,6 +1136,84 @@ export const RoomsPage: React.FC = () => {
                     </button>
                   )}
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Modal de Confirmación para Mantenimiento */}
+      {maintenanceModal.isOpen && maintenanceModal.room && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg ${
+                  maintenanceModal.room.status === 'Mantenimiento' 
+                    ? 'bg-gradient-to-br from-green-500 to-green-600' 
+                    : 'bg-gradient-to-br from-yellow-500 to-yellow-600'
+                }`}>
+                  <Wrench className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-gray-900 text-xl font-bold">
+                    {maintenanceModal.room.status === 'Mantenimiento' 
+                      ? 'Quitar de Mantenimiento' 
+                      : 'Poner en Mantenimiento'}
+                  </h3>
+                  <p className="text-gray-600 text-sm mt-1">
+                    {maintenanceModal.room.status === 'Mantenimiento' 
+                      ? 'La habitación volverá a estar disponible' 
+                      : 'La habitación no estará disponible temporalmente'}
+                  </p>
+                </div>
+              </div>
+              
+              <div className={`border rounded-lg p-4 mb-6 ${
+                maintenanceModal.room.status === 'Mantenimiento' 
+                  ? 'bg-green-50 border-green-200' 
+                  : 'bg-yellow-50 border-yellow-200'
+              }`}>
+                <p className="text-gray-700 text-sm">
+                  {maintenanceModal.room.status === 'Mantenimiento' 
+                    ? '¿Confirmas que quieres quitar la habitación ' 
+                    : '¿Confirmas que quieres poner la habitación '}
+                  <span className="font-semibold text-gray-900">{maintenanceModal.room.name}</span>
+                  {maintenanceModal.room.status === 'Mantenimiento' 
+                    ? ' del estado de mantenimiento?' 
+                    : ' en estado de mantenimiento?'}
+                </p>
+                <p className={`text-xs mt-2 font-medium ${
+                  maintenanceModal.room.status === 'Mantenimiento' 
+                    ? 'text-green-600' 
+                    : 'text-yellow-600'
+                }`}>
+                  {maintenanceModal.room.status === 'Mantenimiento' 
+                    ? '✅ La habitación estará disponible para reservas' 
+                    : '⚠️ La habitación no aparecerá como disponible'}
+                </p>
+              </div>
+              
+              <div className="flex justify-end gap-3">
+                <button 
+                  onClick={() => setMaintenanceModal({ isOpen: false, room: null })}
+                  className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold transition-all duration-200"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={() => toggleMaintenance(maintenanceModal.room!)}
+                  className={`flex items-center gap-2 px-6 py-3 text-white rounded-lg font-semibold transition-all duration-200 ${
+                    maintenanceModal.room.status === 'Mantenimiento' 
+                      ? 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600' 
+                      : 'bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-600'
+                  }`}
+                >
+                  <Wrench className="w-4 h-4" />
+                  {maintenanceModal.room.status === 'Mantenimiento' 
+                    ? 'Quitar Mantenimiento' 
+                    : 'Confirmar Mantenimiento'}
+                </button>
               </div>
             </div>
           </div>
