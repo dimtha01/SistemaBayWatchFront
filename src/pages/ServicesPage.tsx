@@ -1,4 +1,3 @@
-import { Header } from "../components/Header/Header";
 import { ServicesHero } from "../components/ServicesHero/ServicesHero";
 import { CategorizedServicesSection } from "../components/CategorizedServicesSection/CategorizedServicesSection";
 import { PremiumServicesSection } from "../components/PremiumServicesSection/PremiumServicesSection";
@@ -6,7 +5,6 @@ import { PremiumServicesSection } from "../components/PremiumServicesSection/Pre
 export const ServicesPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <ServicesHero />
       <main className="relative z-10">
         <CategorizedServicesSection />
