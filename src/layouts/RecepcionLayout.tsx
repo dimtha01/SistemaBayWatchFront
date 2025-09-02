@@ -1,19 +1,19 @@
-import { SiteHeader } from "../modules/GestionHotel/ui/site_header"
+import { SiteHeader } from "../modules/Recepcion/ui/site_header"
 import {
     SidebarInset,
     SidebarProvider,
 } from "@/components/ui/sidebar"
-import { AppSidebar } from "../modules/GestionHotel/ui/app-sidebar"
+import { AppSidebar } from "../modules/Recepcion/ui/app-sidebar"
 import { Outlet } from "react-router-dom";
 
-export const GestionLayout = () => {
+export const RecepcionLayout = () => {
     return (
         <SidebarProvider
             style={
                 {
                     "--sidebar-width": "calc(var(--spacing) * 72)",
                     "--header-height": "calc(var(--spacing) * 12)",
-                }
+                } as React.CSSProperties
             }
         >
             <AppSidebar variant="inset" />
