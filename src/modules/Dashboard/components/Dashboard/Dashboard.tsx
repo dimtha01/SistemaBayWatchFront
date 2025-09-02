@@ -1,7 +1,5 @@
-import { ChartAreaInteractive } from "../ui/chat-area-interactive"
-import { SectionCards } from "../ui/section-cards"
-
-
+import { ChartAreaInteractive } from "../../ui/chat-area-interactive"
+import { SectionCards } from "../../ui/section-cards"
 
 export const Dashboard = () => {
     return (
@@ -11,6 +9,7 @@ export const Dashboard = () => {
                     <SectionCards />
                     <div className="px-4 lg:px-6">
                         <ChartAreaInteractive />
+                        
                     </div>
                 </div>
             </div>

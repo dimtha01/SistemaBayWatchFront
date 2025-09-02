@@ -6,8 +6,6 @@ import {
 import { AppSidebar } from "../modules/Dashboard/ui/app-sidebar"
 import { Outlet } from "react-router-dom";
 
-
-
 export const DashboardLayout = () => {
     return (
         <SidebarProvider

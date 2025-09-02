@@ -17,6 +17,7 @@ import { LoginPage } from "@/pages/LoginPage";
 import { DashboardLayout } from "@/layouts/DashboardLayout";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { ExperienceDetailsPage } from "@/pages/ExperienceDetailsPage";
+import { MainteincePage } from "@/pages/MainteincePage";
 
 // Configuración de rutas
 export const router = createBrowserRouter([
@@ -85,9 +86,14 @@ export const router = createBrowserRouter([
     element: <DashboardLayout />,
     errorElement: <ErrorPage />,
     children: [
+      // {
+      //   path: "/dashboard",
+      //   element: <DashboardPage />,
+      //   index: true,
+      // },
       {
         path: "/dashboard",
-        element: <DashboardPage />,
+        element: <MainteincePage />,
         index: true,
       },
     ],
