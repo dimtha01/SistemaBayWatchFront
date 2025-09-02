@@ -20,8 +20,7 @@ import { ExperienceDetailsPage } from "@/pages/ExperienceDetailsPage";
 import { MainteincePage } from "@/pages/MainteincePage";
 import { RoomsPage } from "@/pages/RoomsPage";
 import { GestionLayout } from "@/layouts/GestionLayout"
-import { RecepcionLayout } from "@/layouts/RecepcionLayout";
-import { ReservationsDashboard } from "@/modules/Recepcion/components/ReservationsDashboard";
+// import { RecepcionLayout } from "@/layouts/RecepcionLayout";
 
 // Configuración de rutas
 export const router = createBrowserRouter([
@@ -109,18 +108,6 @@ export const router = createBrowserRouter([
       {
         path: "/gestion",
         element: <RoomsPage />,
-        index: true,
-      },
-    ],
-  },
-  {
-    path: "/recepcion",
-    element: <RecepcionLayout/>,
-    errorElement: <ErrorPage />,
-    children: [
-      {
-        path: "/recepcion",
-        element: <ReservationsDashboard />,
         index: true,
       },
     ],

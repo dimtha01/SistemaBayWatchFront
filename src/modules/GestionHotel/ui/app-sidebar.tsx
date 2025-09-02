@@ -1,12 +1,15 @@
-
 import * as React from "react"
 import {
-  IconChartBar,
   IconDashboard,
-  IconFolder,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconUsers,
+  IconBed,
+  IconCalendarEvent,
+  IconClipboardList,
+  IconSettings,
+  IconTool,
+  IconPlus,
+  IconEdit,
+  IconEye,
+  IconBuilding,
 } from "@tabler/icons-react"
 
 import { NavMain } from "./nav-main"
@@ -23,35 +26,69 @@ import {
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: "Admin Hotel",
+    email: "admin@hotel.com",
+    avatar: "/avatars/hotel-admin.jpg",
   },
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
+      title: "Gestión de Habitaciones",
+      url: "/habitaciones",
+      icon: IconBed,
+      items: [
+        {
+          title: "Ver Todas",
+          url: "/habitaciones",
+          icon: IconEye,
+        },
+        {
+          title: "Nueva Habitación",
+          url: "/habitaciones/nueva",
+          icon: IconPlus,
+        },
+        {
+          title: "Modificar Habitación",
+          url: "/habitaciones/editar",
+          icon: IconEdit,
+        },
+        {
+          title: "Mantenimiento",
+          url: "/habitaciones/mantenimiento",
+          icon: IconTool,
+        },
+      ],
     },
     {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
+      title: "Reservaciones",
+      url: "/reservaciones",
+      icon: IconCalendarEvent,
+      items: [
+        {
+          title: "Todas las Reservaciones",
+          url: "/reservaciones",
+          icon: IconEye,
+        },
+        {
+          title: "Solicitudes Pendientes",
+          url: "/reservaciones/solicitudes",
+          icon: IconClipboardList,
+        },
+        {
+          title: "Nueva Reservación",
+          url: "/reservaciones/nueva",
+          icon: IconPlus,
+        },
+      ],
     },
     {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: IconUsers,
+      title: "Configuración",
+      url: "/configuracion",
+      icon: IconSettings,
     },
   ],
 }
@@ -66,9 +103,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+              <a href="/dashboard">
+                <IconBuilding className="!size-5 text-red-600" />
+                <span className="text-base font-semibold text-gray-900">
+                  Hotel Manager
+                </span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
