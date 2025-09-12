@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,7 +18,6 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import {
-  CreditCard,
   DollarSign,
   Smartphone,
   Building2,
@@ -32,8 +30,7 @@ import {
   Shield,
   AlertCircle,
   X,
-  Download,
-  InfoIcon,
+  Upload
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -53,7 +50,6 @@ interface BookingWidgetProps {
     guestName?: string;
     status?: "confirmed" | "pending" | "checkout";
   }[];
-  // 🆕 NUEVO PARÁMETRO PARA EL ID DE LA HABITACIÓN
   roomId: string;
 }
 
@@ -91,7 +87,6 @@ interface PaymentMethod {
   available: boolean;
 }
 
-// 🆕 INTERFACES PARA LA API
 interface ReservaAPI {
   fecha_entrada: string;
   fecha_salida: string;
@@ -112,7 +107,7 @@ export const BookingWidget = ({
   maxNights = 30,
   unavailableDates = [],
   reservedPeriods = [],
-  roomId, // 🆕 PARÁMETRO OBLIGATORIO
+  roomId,
 }: BookingWidgetProps) => {
   const [checkIn, setCheckIn] = useState<Date | undefined>();
   const [checkOut, setCheckOut] = useState<Date | undefined>();
@@ -121,28 +116,30 @@ export const BookingWidget = ({
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [showCheckInCalendar, setShowCheckInCalendar] = useState(false);
   const [showCheckOutCalendar, setShowCheckOutCalendar] = useState(false);
+
+  // ✅ ESTADO ACTUALIZADO DE INFORMACIÓN DEL HUÉSPED (OBLIGATORIO)
   const [guestInfo, setGuestInfo] = useState({
-    name: "",
+    nombre_completo: "",
     email: "",
-    phone: "",
-    document: "",
-    notes: "",
+    telefono: "",
+    documento_identidad: "",
+    comentarios_adicionales: "",
   });
 
-  // ✅ ESTADO ACTUALIZADO DE PAYMENT DETAILS CON TODOS LOS CAMPOS
+  // ✅ ESTADO ACTUALIZADO DE PAYMENT DETAILS SIN TARJETA + ARCHIVO
   const [paymentDetails, setPaymentDetails] = useState({
-    cardNumber: "",
-    expiryDate: "",
-    cvv: "",
-    cardName: "",
-    transferenceReference: "",
-    pagoMovilPhone: "",
-    pagoMovilReference: "",
-    cryptoWallet: "",
-    cryptoTxHash: "",
-    zelleEmail: "",
-    zelleReference: "",
+    referencia_transferencia: "",
+    telefono_pago_movil: "",
+    referencia_pago_movil: "",
+    billetera_cripto: "",
+    hash_transaccion_cripto: "",
+    email_zelle: "",
+    referencia_zelle: "",
   });
+
+  // 🆕 ESTADO PARA EL ARCHIVO DE COMPROBANTE
+  const [comprobanteFile, setComprobanteFile] = useState<File | null>(null);
+  const [comprobantePreview, setComprobantePreview] = useState<string | null>(null);
 
   const [paymentStep, setPaymentStep] = useState<
     "method" | "details" | "guest" | "success"
@@ -164,56 +161,57 @@ export const BookingWidget = ({
   >([]);
   const [isLoadingReservations, setIsLoadingReservations] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [isSubmittingReservation, setIsSubmittingReservation] = useState(false);
 
-  // AGREGAR ESTE useEffect DESPUÉS DE TODOS LOS useState
-useEffect(() => {
-  // Inyectar estilos CSS una sola vez
-  if (!document.getElementById("calendar-custom-styles")) {
-    const customStyles = `
-      .calendar-reserved-confirmed {
-        background-color: #ef4444 !important;
-        color: white !important;
-        font-weight: 600 !important;
-        border-radius: 6px !important;
-      }
-      .calendar-reserved-pending {
-        background-color: #f59e0b !important;
-        color: #92400e !important;
-        font-weight: 500 !important;
-        border-radius: 6px !important;
-      }
-      .calendar-reserved-checkout {
-        background-color: #3b82f6 !important;
-        color: white !important;
-        font-weight: 500 !important;
-        border-radius: 6px !important;
-      }
-      .calendar-selected-checkin {
-        background-color: #10b981 !important;
-        color: white !important;
-        font-weight: 700 !important;
-        border-radius: 6px !important;
-      }
-      .calendar-selected-checkout {
-        background-color: #059669 !important;
-        color: white !important;
-        font-weight: 700 !important;
-        border-radius: 6px !important;
-      }
-      .calendar-selected-range {
-        background-color: #d1fae5 !important;
-        color: #065f46 !important;
-        border-radius: 6px !important;
-      }
-    `;
+  // ESTILOS CSS INYECTADOS
+  useEffect(() => {
+    if (!document.getElementById("calendar-custom-styles")) {
+      const customStyles = `
+        .calendar-reserved-confirmed {
+          background-color: #ef4444 !important;
+          color: white !important;
+          font-weight: 600 !important;
+          border-radius: 6px !important;
+        }
+        .calendar-reserved-pending {
+          background-color: #f59e0b !important;
+          color: #92400e !important;
+          font-weight: 500 !important;
+          border-radius: 6px !important;
+        }
+        .calendar-reserved-checkout {
+          background-color: #3b82f6 !important;
+          color: white !important;
+          font-weight: 500 !important;
+          border-radius: 6px !important;
+        }
+        .calendar-selected-checkin {
+          background-color: #10b981 !important;
+          color: white !important;
+          font-weight: 700 !important;
+          border-radius: 6px !important;
+        }
+        .calendar-selected-checkout {
+          background-color: #059669 !important;
+          color: white !important;
+          font-weight: 700 !important;
+          border-radius: 6px !important;
+        }
+        .calendar-selected-range {
+          background-color: #d1fae5 !important;
+          color: #065f46 !important;
+          border-radius: 6px !important;
+        }
+      `;
 
-    const styleElement = document.createElement("style");
-    styleElement.id = "calendar-custom-styles";
-    styleElement.textContent = customStyles;
-    document.head.appendChild(styleElement);
-  }
-}, []); // ← DEPENDENCIAS VACÍAS - SOLO SE EJECUTA UNA VEZ
-// Métodos de pago disponibles
+      const styleElement = document.createElement("style");
+      styleElement.id = "calendar-custom-styles";
+      styleElement.textContent = customStyles;
+      document.head.appendChild(styleElement);
+    }
+  }, []);
+
+  // ✅ MÉTODOS DE PAGO ACTUALIZADOS (SIN TARJETA DE CRÉDITO)
   const paymentMethods: PaymentMethod[] = [
     {
       id: "efectivo",
@@ -232,7 +230,7 @@ useEffect(() => {
       available: true,
     },
     {
-      id: "pago-movil",
+      id: "pago_movil",
       name: "Pago Móvil",
       icon: <Smartphone className="h-6 w-6" />,
       description: "Pago móvil interbancario",
@@ -240,15 +238,7 @@ useEffect(() => {
       available: true,
     },
     {
-      id: "tarjeta",
-      name: "Tarjeta de Crédito/Débito",
-      icon: <CreditCard className="h-6 w-6" />,
-      description: "Visa, Mastercard, American Express",
-      color: "bg-orange-500",
-      available: true,
-    },
-    {
-      id: "crypto",
+      id: "cripto",
       name: "Criptomonedas",
       icon: <Bitcoin className="h-6 w-6" />,
       description: "Bitcoin, USDT, Ethereum",
@@ -265,10 +255,52 @@ useEffect(() => {
     },
   ];
 
-  // Obtener fecha mínima (hoy)
   const today = new Date();
 
-  // 🆕 FUNCIÓN PARA OBTENER RESERVAS DE LA API
+  // 🆕 FUNCIÓN PARA MANEJAR EL ARCHIVO DE COMPROBANTE
+  const handleComprobanteChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tipo de archivo
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        setErrors(prev => ({
+          ...prev,
+          comprobante: 'Solo se permiten archivos JPG, PNG, GIF o PDF'
+        }));
+        return;
+      }
+
+      // Validar tamaño (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({
+          ...prev,
+          comprobante: 'El archivo no puede ser mayor a 5MB'
+        }));
+        return;
+      }
+
+      setComprobanteFile(file);
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.comprobante;
+        return newErrors;
+      });
+
+      // Crear preview si es imagen
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setComprobantePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setComprobantePreview(null);
+      }
+    }
+  }, []);
+
+  // FUNCIÓN PARA OBTENER RESERVAS DE LA API
   const fetchReservations = useCallback(async () => {
     if (!roomId) return;
 
@@ -287,9 +319,7 @@ useEffect(() => {
       const apiData: APIResponse = await response.json();
 
       if (apiData.success && apiData.data) {
-        // 🔄 CONVERTIR DATOS DE LA API AL FORMATO ESPERADO
         const convertedPeriods = apiData.data.map((reserva) => {
-          // Convertir estado de la API a nuestro formato
           let status: "confirmed" | "pending" | "checkout" = "confirmed";
 
           switch (reserva.estado_reserva.toLowerCase()) {
@@ -315,7 +345,7 @@ useEffect(() => {
             end: reserva.fecha_salida,
             status,
             reason: `Reserva ${reserva.estado_reserva}`,
-            guestName: undefined, // La API no proporciona nombre del huésped
+            guestName: undefined,
           };
         });
 
@@ -338,28 +368,22 @@ useEffect(() => {
     }
   }, [roomId]);
 
-  // 🆕 CARGAR RESERVAS AL MONTAR EL COMPONENTE Y CUANDO CAMBIE EL roomId
   useEffect(() => {
     fetchReservations();
   }, [fetchReservations]);
 
-  // 🔄 COMBINAR PERÍODOS RESERVADOS DE PROPS Y API
   const allReservedPeriods = useMemo(() => {
     return [...reservedPeriods, ...apiReservedPeriods];
   }, [reservedPeriods, apiReservedPeriods]);
 
-  // ✅ FUNCIÓN PARA VERIFICAR SI UNA FECHA ESTÁ DESHABILITADA
   const isDateDisabled = useCallback(
     (date: Date): boolean => {
-      // Fechas pasadas
       if (date < today) return true;
 
       const dateString = format(date, "yyyy-MM-dd");
 
-      // Fechas individuales no disponibles
       if (unavailableDates.includes(dateString)) return true;
 
-      // Verificar períodos reservados (intervalo semi-abierto [start, end))
       return allReservedPeriods.some((period) => {
         const startDate = new Date(period.start);
         const endDate = new Date(period.end);
@@ -369,13 +393,10 @@ useEffect(() => {
     [unavailableDates, allReservedPeriods]
   );
 
-  // ✅ FUNCIÓN MEJORADA PARA OBTENER MODIFICADORES CON COLORES CORREGIDOS
-  // Línea ~280 - REEMPLAZAR TODA LA FUNCIÓN
   const getDateModifiers = useCallback(() => {
     const modifiers: any = {};
     const modifiersClassNames: any = {};
 
-    // Marcar fechas no disponibles
     const unavailableDateObjects = unavailableDates.map(
       (dateStr) => new Date(dateStr)
     );
@@ -384,7 +405,6 @@ useEffect(() => {
       modifiersClassNames.unavailable = "opacity-50 line-through text-red-500";
     }
 
-    // Marcar períodos reservados
     allReservedPeriods.forEach((period, index) => {
       const startDate = new Date(period.start);
       const endDate = new Date(period.end);
@@ -401,7 +421,6 @@ useEffect(() => {
       const modifierKey = `reserved_${index}`;
       modifiers[modifierKey] = reservedDates;
 
-      // Diferentes estilos según el estado SIN MANIPULAR EL DOM
       switch (period.status) {
         case "confirmed":
           modifiersClassNames[modifierKey] =
@@ -421,7 +440,6 @@ useEffect(() => {
       }
     });
 
-    // Marcar fechas seleccionadas
     if (checkIn) {
       modifiers.checkIn = [checkIn];
       modifiersClassNames.checkIn = "bg-green-500 text-white font-bold";
@@ -432,7 +450,6 @@ useEffect(() => {
       modifiersClassNames.checkOut = "bg-green-600 text-white font-bold";
     }
 
-    // Marcar rango seleccionado
     if (checkIn && checkOut) {
       const rangeDates: Date[] = [];
       for (
@@ -453,129 +470,108 @@ useEffect(() => {
     return { modifiers, modifiersClassNames };
   }, [unavailableDates, allReservedPeriods, checkIn, checkOut]);
 
-  // ✅ VALIDACIÓN DE FECHAS ACTUALIZADA
- // ✅ REEMPLAZAR validateDates COMPLETAMENTE
+  const bookingCalculations = useMemo(() => {
+    if (!checkIn || !checkOut) {
+      return {
+        nights: 0,
+        subtotal: 0,
+        taxes: 150,
+        total: 150,
+        isValidDates: false,
+      };
+    }
 
+    if (checkOut <= checkIn) {
+      return {
+        nights: 0,
+        subtotal: 0,
+        taxes: 150,
+        total: 150,
+        isValidDates: false,
+      };
+    }
 
+    const nights = Math.floor(
+      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
-  // ✅ CÁLCULOS DE RESERVA ACTUALIZADOS
-// ✅ REEMPLAZAR bookingCalculations COMPLETAMENTE
-const bookingCalculations = useMemo(() => {
-  if (!checkIn || !checkOut) {
-    return {
-      nights: 0,
-      subtotal: 0,
-      taxes: 150,
-      total: 150,
-      isValidDates: false,
-    };
-  }
+    if (nights < minNights || nights > maxNights) {
+      return {
+        nights,
+        subtotal: 0,
+        taxes: 150,
+        total: 150,
+        isValidDates: false,
+      };
+    }
 
-  if (checkOut <= checkIn) {
-    return {
-      nights: 0,
-      subtotal: 0,
-      taxes: 150,
-      total: 150,
-      isValidDates: false,
-    };
-  }
+    const subtotal = nights * pricePerNight;
+    const taxes = 150;
+    const total = subtotal + taxes;
 
-  const nights = Math.floor(
-    (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
-  );
+    const hasDateConflicts = (() => {
+      for (
+        let date = new Date(checkIn);
+        date < checkOut;
+        date.setDate(date.getDate() + 1)
+      ) {
+        if (isDateDisabled(date)) {
+          return true;
+        }
+      }
+      return false;
+    })();
 
-  if (nights < minNights || nights > maxNights) {
     return {
       nights,
-      subtotal: 0,
-      taxes: 150,
-      total: 150,
-      isValidDates: false,
+      subtotal,
+      taxes,
+      total,
+      isValidDates: !hasDateConflicts,
     };
-  }
+  }, [checkIn, checkOut, pricePerNight, minNights, maxNights, isDateDisabled]);
 
-  const subtotal = nights * pricePerNight;
-  const taxes = 150;
-  const total = subtotal + taxes;
+  useEffect(() => {
+    const isValid = Boolean(
+      checkIn &&
+      checkOut &&
+      bookingCalculations.isValidDates &&
+      bookingCalculations.nights > 0 &&
+      Object.keys(dateErrors).length === 0
+    );
 
-  // Validación simple sin dependencias circulares
-  const hasDateConflicts = (() => {
-    for (
-      let date = new Date(checkIn);
-      date < checkOut;
-      date.setDate(date.getDate() + 1)
-    ) {
-      if (isDateDisabled(date)) {
-        return true;
-      }
+    if (isValid !== isValidBooking) {
+      setIsValidBooking(isValid);
     }
-    return false;
-  })();
+  }, [checkIn, checkOut, bookingCalculations.isValidDates, bookingCalculations.nights, dateErrors, isValidBooking]);
 
-  return {
-    nights,
-    subtotal,
-    taxes,
-    total,
-    isValidDates: !hasDateConflicts,
-  };
-}, [checkIn, checkOut, pricePerNight, minNights, maxNights, isDateDisabled]);
-
-
-  // ✅ useEffect PARA ACTUALIZAR isValidBooking
-  // ✅ REEMPLAZAR useEffect COMPLETAMENTE
-useEffect(() => {
-  const isValid = Boolean(
-    checkIn &&
-    checkOut &&
-    bookingCalculations.isValidDates &&
-    bookingCalculations.nights > 0 &&
-    Object.keys(dateErrors).length === 0
+  const handleCheckInSelect = useCallback(
+    (date: Date | undefined) => {
+      if (!date) return;
+      
+      setCheckIn(date);
+      
+      if (checkOut && checkOut <= date) {
+        setCheckOut(undefined);
+      }
+      
+      setShowCheckInCalendar(false);
+      setDateErrors({});
+    },
+    [checkOut]
   );
 
-  // Solo actualizar si hay cambio
-  if (isValid !== isValidBooking) {
-    setIsValidBooking(isValid);
-  }
-}, [checkIn, checkOut, bookingCalculations.isValidDates, bookingCalculations.nights, dateErrors, isValidBooking]);
+  const handleCheckOutSelect = useCallback(
+    (date: Date | undefined) => {
+      if (!date) return;
+      
+      setCheckOut(date);
+      setShowCheckOutCalendar(false);
+      setDateErrors({});
+    },
+    []
+  );
 
-
-  // ✅ MANEJAR SELECCIÓN DE FECHAS EN EL CALENDARIO
- // ✅ REEMPLAZAR ESTAS FUNCIONES COMPLETAMENTE
-const handleCheckInSelect = useCallback(
-  (date: Date | undefined) => {
-    if (!date) return;
-    
-    setCheckIn(date);
-    
-    // Si la fecha de checkout es anterior o igual, limpiarla
-    if (checkOut && checkOut <= date) {
-      setCheckOut(undefined);
-    }
-    
-    setShowCheckInCalendar(false);
-    
-    // Limpiar errores de fechas
-    setDateErrors({});
-  },
-  [checkOut] // ← SOLO checkOut como dependencia
-);
-
-const handleCheckOutSelect = useCallback(
-  (date: Date | undefined) => {
-    if (!date) return;
-    
-    setCheckOut(date);
-    setShowCheckOutCalendar(false);
-    
-    // Limpiar errores de fechas
-    setDateErrors({});
-  },
-  [] // ← SIN DEPENDENCIAS
-);
-
-  // ✅ FUNCIONES AUXILIARES
   const generateBookingId = useCallback(() => {
     return `HTL${Date.now().toString().slice(-8)}${Math.random()
       .toString(36)
@@ -583,13 +579,11 @@ const handleCheckOutSelect = useCallback(
       .toUpperCase()}`;
   }, []);
 
-
   const formatDateShort = useCallback((date: Date | undefined) => {
     if (!date) return "";
     return format(date, "dd/MM/yyyy");
   }, []);
 
-  // ✅ HANDLE SUBMIT CON VALIDACIÓN CRÍTICA
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
@@ -615,103 +609,89 @@ const handleCheckOutSelect = useCallback(
     }
   }, []);
 
-  // ✅ VALIDACIÓN DE DETALLES DE PAGO COMPLETA
+  // ✅ VALIDACIÓN DE DETALLES DE PAGO ACTUALIZADA SIN TARJETA + COMPROBANTE
   const validatePaymentDetails = useCallback(() => {
     const newErrors: { [key: string]: string } = {};
 
+    // Validar comprobante para todos los métodos excepto efectivo
+    if (selectedPaymentMethod !== "efectivo" && !comprobanteFile) {
+      newErrors.comprobante = "El comprobante de pago es obligatorio";
+    }
+
     switch (selectedPaymentMethod) {
-      case "tarjeta":
-        if (!paymentDetails.cardNumber.trim()) {
-          newErrors.cardNumber = "Número de tarjeta requerido";
-        } else if (paymentDetails.cardNumber.replace(/\s/g, "").length < 16) {
-          newErrors.cardNumber = "Número de tarjeta inválido";
-        }
-        if (!paymentDetails.expiryDate.trim()) {
-          newErrors.expiryDate = "Fecha de vencimiento requerida";
-        } else if (!/^\d{2}\/\d{2}$/.test(paymentDetails.expiryDate)) {
-          newErrors.expiryDate = "Formato inválido (MM/AA)";
-        }
-        if (!paymentDetails.cvv.trim()) {
-          newErrors.cvv = "CVV requerido";
-        } else if (paymentDetails.cvv.length < 3) {
-          newErrors.cvv = "CVV inválido";
-        }
-        if (!paymentDetails.cardName.trim()) {
-          newErrors.cardName = "Nombre en la tarjeta requerido";
-        }
-        break;
-
       case "transferencia":
-        if (!paymentDetails.transferenceReference.trim()) {
-          newErrors.transferenceReference =
-            "Referencia de transferencia requerida";
-        } else if (paymentDetails.transferenceReference.length < 6) {
-          newErrors.transferenceReference =
-            "Referencia debe tener al menos 6 caracteres";
+        if (!paymentDetails.referencia_transferencia.trim()) {
+          newErrors.referencia_transferencia = "Referencia de transferencia requerida";
+        } else if (paymentDetails.referencia_transferencia.length < 6) {
+          newErrors.referencia_transferencia = "Referencia debe tener al menos 6 caracteres";
         }
         break;
 
-      case "pago-movil":
-        if (!paymentDetails.pagoMovilPhone.trim()) {
-          newErrors.pagoMovilPhone = "Teléfono requerido";
+      case "pago_movil":
+        if (!paymentDetails.telefono_pago_movil.trim()) {
+          newErrors.telefono_pago_movil = "Teléfono requerido";
         } else if (
           !/^(0414|0424|0412|0416|0426)\d{7}$/.test(
-            paymentDetails.pagoMovilPhone.replace(/[-\s]/g, "")
+            paymentDetails.telefono_pago_movil.replace(/[-\s]/g, "")
           )
         ) {
-          newErrors.pagoMovilPhone = "Formato de teléfono inválido";
+          newErrors.telefono_pago_movil = "Formato de teléfono inválido";
         }
-        if (!paymentDetails.pagoMovilReference.trim()) {
-          newErrors.pagoMovilReference = "Referencia requerida";
-        } else if (paymentDetails.pagoMovilReference.length < 6) {
-          newErrors.pagoMovilReference =
-            "Referencia debe tener al menos 6 caracteres";
+        if (!paymentDetails.referencia_pago_movil.trim()) {
+          newErrors.referencia_pago_movil = "Referencia requerida";
+        } else if (paymentDetails.referencia_pago_movil.length < 6) {
+          newErrors.referencia_pago_movil = "Referencia debe tener al menos 6 caracteres";
         }
         break;
 
-      case "crypto":
-        if (!paymentDetails.cryptoWallet.trim()) {
-          newErrors.cryptoWallet = "Dirección de wallet requerida";
-        } else if (paymentDetails.cryptoWallet.length < 26) {
-          newErrors.cryptoWallet = "Dirección de wallet inválida";
+      case "cripto":
+        if (!paymentDetails.billetera_cripto.trim()) {
+          newErrors.billetera_cripto = "Dirección de wallet requerida";
+        } else if (paymentDetails.billetera_cripto.length < 26) {
+          newErrors.billetera_cripto = "Dirección de wallet inválida";
         }
-        if (!paymentDetails.cryptoTxHash.trim()) {
-          newErrors.cryptoTxHash = "Hash de transacción requerido";
+        if (!paymentDetails.hash_transaccion_cripto.trim()) {
+          newErrors.hash_transaccion_cripto = "Hash de transacción requerido";
         }
         break;
 
       case "zelle":
-        if (!paymentDetails.zelleEmail.trim()) {
-          newErrors.zelleEmail = "Email de Zelle requerido";
-        } else if (!/\S+@\S+\.\S+/.test(paymentDetails.zelleEmail)) {
-          newErrors.zelleEmail = "Email inválido";
+        if (!paymentDetails.email_zelle.trim()) {
+          newErrors.email_zelle = "Email de Zelle requerido";
+        } else if (!/\S+@\S+\.\S+/.test(paymentDetails.email_zelle)) {
+          newErrors.email_zelle = "Email inválido";
         }
-        if (!paymentDetails.zelleReference.trim()) {
-          newErrors.zelleReference = "Referencia de Zelle requerida";
+        if (!paymentDetails.referencia_zelle.trim()) {
+          newErrors.referencia_zelle = "Referencia de Zelle requerida";
         }
         break;
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [selectedPaymentMethod, paymentDetails]);
+  }, [selectedPaymentMethod, paymentDetails, comprobanteFile]);
 
+  // ✅ VALIDACIÓN DE INFORMACIÓN DEL HUÉSPED ACTUALIZADA
   const validateGuestInfo = useCallback(() => {
     const newErrors: { [key: string]: string } = {};
 
-    if (!guestInfo.name.trim()) {
-      newErrors.name = "El nombre es requerido";
+    if (!guestInfo.nombre_completo.trim()) {
+      newErrors.nombre_completo = "El nombre completo es requerido";
     }
     if (!guestInfo.email.trim()) {
       newErrors.email = "El email es requerido";
     } else if (!/\S+@\S+\.\S+/.test(guestInfo.email)) {
       newErrors.email = "Email inválido";
     }
-    if (!guestInfo.phone.trim()) {
-      newErrors.phone = "El teléfono es requerido";
+    if (!guestInfo.telefono.trim()) {
+      newErrors.telefono = "El teléfono es requerido";
+    } else if (!/^(04\d{9}|02\d{8}|\+58\d{10})$/.test(guestInfo.telefono.replace(/[-\s]/g, ""))) {
+      newErrors.telefono = "Formato de teléfono inválido. Ejemplos: 04141234567, 02121234567";
     }
-    if (!guestInfo.document.trim()) {
-      newErrors.document = "El documento es requerido";
+    if (!guestInfo.documento_identidad.trim()) {
+      newErrors.documento_identidad = "El documento de identidad es requerido";
+    } else if (!/^[VEJPvejp]-?\d{6,8}$/.test(guestInfo.documento_identidad)) {
+      newErrors.documento_identidad = "Formato de documento inválido. Ejemplos: V-12345678, E-12345678";
     }
     if (!termsAccepted) {
       newErrors.terms = "Debes aceptar los términos y condiciones";
@@ -721,39 +701,166 @@ const handleCheckOutSelect = useCallback(
     return Object.keys(newErrors).length === 0;
   }, [guestInfo, termsAccepted]);
 
-  // ✅ ACTUALIZAR handlePaymentComplete
-  const handlePaymentComplete = useCallback(() => {
+  // 🆕 FUNCIÓN PARA ENVIAR LA RESERVA A LA API CON TODOS LOS DATOS
+  const submitReservationToAPI = useCallback(async () => {
+    if (!checkIn || !checkOut) {
+      throw new Error("Datos incompletos para la reserva");
+    }
+
+    // Para efectivo no se requiere comprobante
+    if (selectedPaymentMethod !== "efectivo" && !comprobanteFile) {
+      throw new Error("Comprobante de pago requerido");
+    }
+
+    setIsSubmittingReservation(true);
+
+    try {
+      const formData = new FormData();
+
+      // ✅ DATOS OBLIGATORIOS DE LA RESERVA
+      formData.append('habitacion_id', roomId);
+      formData.append('fecha_entrada', format(checkIn, 'yyyy-MM-dd'));
+      formData.append('fecha_salida', format(checkOut, 'yyyy-MM-dd'));
+      formData.append('metodo_pago', selectedPaymentMethod);
+      formData.append('total_precio', bookingCalculations.total.toString());
+
+      // ✅ DATOS OBLIGATORIOS DEL HUÉSPED
+      formData.append('nombre_completo', guestInfo.nombre_completo);
+      formData.append('email', guestInfo.email);
+      formData.append('telefono', guestInfo.telefono);
+      formData.append('documento_identidad', guestInfo.documento_identidad);
+
+      // ✅ COMENTARIOS ADICIONALES (OPCIONAL)
+      if (guestInfo.comentarios_adicionales.trim()) {
+        formData.append('comentarios_adicionales', guestInfo.comentarios_adicionales);
+      }
+
+      // ✅ DATOS ESPECÍFICOS DEL MÉTODO DE PAGO
+      switch (selectedPaymentMethod) {
+        case "transferencia":
+          formData.append('referencia_transferencia', paymentDetails.referencia_transferencia);
+          break;
+        case "pago_movil":
+          formData.append('telefono_pago_movil', paymentDetails.telefono_pago_movil.replace(/[-\s]/g, ''));
+          formData.append('referencia_pago_movil', paymentDetails.referencia_pago_movil);
+          break;
+        case "zelle":
+          formData.append('email_zelle', paymentDetails.email_zelle);
+          formData.append('referencia_zelle', paymentDetails.referencia_zelle);
+          break;
+        case "cripto":
+          formData.append('billetera_cripto', paymentDetails.billetera_cripto);
+          formData.append('hash_transaccion_cripto', paymentDetails.hash_transaccion_cripto);
+          break;
+      }
+
+      // ✅ ARCHIVO DE COMPROBANTE (OBLIGATORIO PARA TODOS EXCEPTO EFECTIVO)
+      if (selectedPaymentMethod !== "efectivo" && comprobanteFile) {
+        formData.append('comprobantes', comprobanteFile);
+      }
+
+      console.log('🚀 Enviando datos a la API:', {
+        habitacion_id: roomId,
+        metodo_pago: selectedPaymentMethod,
+        nombre_completo: guestInfo.nombre_completo,
+        email: guestInfo.email,
+        telefono: guestInfo.telefono,
+        documento_identidad: guestInfo.documento_identidad,
+        tiene_comprobante: !!comprobanteFile,
+      });
+
+      const response = await fetch('http://localhost:3000/api/reservaHabitacion', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Error al crear la reserva');
+      }
+
+      console.log('✅ Reserva creada exitosamente:', result.data);
+      return result.data;
+
+    } catch (error) {
+      console.error('❌ Error al enviar reserva:', error);
+      throw error;
+    } finally {
+      setIsSubmittingReservation(false);
+    }
+  }, [
+    checkIn,
+    checkOut,
+    roomId,
+    selectedPaymentMethod,
+    bookingCalculations.total,
+    guestInfo,
+    paymentDetails,
+    comprobanteFile
+  ]);
+
+  // ✅ HANDLE PAYMENT COMPLETE ACTUALIZADO CON API
+  const handlePaymentComplete = useCallback(async () => {
     if (paymentStep === "details" && validatePaymentDetails()) {
       setPaymentStep("guest");
     } else if (paymentStep === "guest" && validateGuestInfo()) {
-      const newBookingId = generateBookingId();
+      try {
+        // 🆕 ENVIAR A LA API REAL
+        const apiResult = await submitReservationToAPI();
 
-      const bookingData: BookingData = {
-        id: newBookingId,
-        checkIn: checkIn ? format(checkIn, "yyyy-MM-dd") : "",
-        checkOut: checkOut ? format(checkOut, "yyyy-MM-dd") : "",
-        guests: parseInt(guests),
-        nights: bookingCalculations.nights,
-        pricePerNight,
-        subtotal: bookingCalculations.subtotal,
-        taxes: bookingCalculations.taxes,
-        serviceFee: 0,
-        cleaningFee: 0,
-        total: bookingCalculations.total,
-        bookingDate: new Date().toISOString(),
-        status: "confirmed",
-        paymentMethod: selectedPaymentMethod,
-        paymentDetails,
-        guestInfo,
-      };
+        // Crear datos de reserva para el callback local
+        // Crear datos de reserva para el callback local
+        const newBookingId = generateBookingId();
+        const bookingData: BookingData = {
+          id: newBookingId,
+          checkIn: checkIn ? format(checkIn, "yyyy-MM-dd") : "",
+          checkOut: checkOut ? format(checkOut, "yyyy-MM-dd") : "",
+          guests: parseInt(guests),
+          nights: bookingCalculations.nights,
+          pricePerNight,
+          subtotal: bookingCalculations.subtotal,
+          taxes: bookingCalculations.taxes,
+          serviceFee: 0,
+          cleaningFee: 0,
+          total: bookingCalculations.total,
+          bookingDate: new Date().toISOString(),
+          status: "confirmed",
+          paymentMethod: selectedPaymentMethod,
+          paymentDetails,
+          guestInfo: {
+            name: guestInfo.nombre_completo,
+            email: guestInfo.email,
+            phone: guestInfo.telefono,
+            document: guestInfo.documento_identidad,
+            notes: guestInfo.comentarios_adicionales,
+          },
+        };
 
-      onBooking(bookingData);
-      setPaymentStep("success");
+        // Llamar al callback del componente padre
+        onBooking(bookingData);
+        
+        // Actualizar las reservas
+        await fetchReservations();
+        
+        setPaymentStep("success");
+      } catch (error) {
+        console.error('Error al procesar la reserva:', error);
+        setErrors({
+          submit: error instanceof Error ? error.message : 'Error al procesar la reserva'
+        });
+      }
     }
   }, [
     paymentStep,
     validatePaymentDetails,
     validateGuestInfo,
+    submitReservationToAPI,
     generateBookingId,
     checkIn,
     checkOut,
@@ -764,26 +871,31 @@ const handleCheckOutSelect = useCallback(
     paymentDetails,
     guestInfo,
     onBooking,
+    fetchReservations,
   ]);
 
   const resetBooking = useCallback(() => {
     setCheckIn(undefined);
     setCheckOut(undefined);
     setGuests("2");
-    setGuestInfo({ name: "", email: "", phone: "", document: "", notes: "" });
-    setPaymentDetails({
-      cardNumber: "",
-      expiryDate: "",
-      cvv: "",
-      cardName: "",
-      transferenceReference: "",
-      pagoMovilPhone: "",
-      pagoMovilReference: "",
-      cryptoWallet: "",
-      cryptoTxHash: "",
-      zelleEmail: "",
-      zelleReference: "",
+    setGuestInfo({ 
+      nombre_completo: "", 
+      email: "", 
+      telefono: "", 
+      documento_identidad: "", 
+      comentarios_adicionales: "" 
     });
+    setPaymentDetails({
+      referencia_transferencia: "",
+      telefono_pago_movil: "",
+      referencia_pago_movil: "",
+      billetera_cripto: "",
+      hash_transaccion_cripto: "",
+      email_zelle: "",
+      referencia_zelle: "",
+    });
+    setComprobanteFile(null);
+    setComprobantePreview(null);
     setShowPaymentModal(false);
     setPaymentStep("method");
     setSelectedPaymentMethod("");
@@ -813,12 +925,11 @@ const handleCheckOutSelect = useCallback(
     const modal = document.getElementById("mobile-booking-modal");
     if (modal) modal.classList.add("hidden");
   }, []);
-  // ✅ RENDERIZAR LEYENDA LATERAL DEL CALENDARIO CON PRÓXIMAS RESERVAS ABAJO
+
   const renderCalendarLegend = useCallback(
     () => (
       <div className="ml-4 flex-shrink-0 w-48">
         <div className="p-4 bg-gray-50 rounded-lg border">
-          {/* INDICADOR DE CARGA */}
           {isLoadingReservations && (
             <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
               <div className="flex items-center space-x-2">
@@ -828,7 +939,6 @@ const handleCheckOutSelect = useCallback(
             </div>
           )}
 
-          {/* ERROR DE API */}
           {apiError && (
             <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-700">
               <div className="flex items-center space-x-2">
@@ -844,7 +954,6 @@ const handleCheckOutSelect = useCallback(
             </div>
           )}
 
-          {/* LEYENDA PRIMERO */}
           <h4 className="text-sm font-semibold text-gray-700 mb-3">Leyenda:</h4>
           <div className="space-y-3 mb-6">
             <div className="flex items-center space-x-3">
@@ -869,7 +978,6 @@ const handleCheckOutSelect = useCallback(
             </div>
           </div>
 
-          {/* PRÓXIMAS RESERVAS ABAJO */}
           {(() => {
             const upcomingReservations = allReservedPeriods
               .filter((period) => new Date(period.end) >= today)
@@ -934,24 +1042,19 @@ const handleCheckOutSelect = useCallback(
     [allReservedPeriods, isLoadingReservations, apiError, fetchReservations]
   );
 
-  // ✅ OBTENER MODIFICADORES DEL CALENDARIO
-  // Línea ~750 - REEMPLAZAR CON useMemo
   const { modifiers, modifiersClassNames } = useMemo(() => {
     return getDateModifiers();
   }, [getDateModifiers]);
 
-  // ✅ DEBUG LOG
- // Línea ~755 - SIMPLIFICAR LAS DEPENDENCIAS
-useEffect(() => {
-  console.log("Debug booking:", {
-    checkIn: checkIn ? format(checkIn, "yyyy-MM-dd") : null,
-    checkOut: checkOut ? format(checkOut, "yyyy-MM-dd") : null,
-    nights: bookingCalculations.nights,
-    isValidBooking,
-    roomId,
-  });
-}, [checkIn, checkOut, bookingCalculations.nights, isValidBooking, roomId]);
-
+  useEffect(() => {
+    console.log("Debug booking:", {
+      checkIn: checkIn ? format(checkIn, "yyyy-MM-dd") : null,
+      checkOut: checkOut ? format(checkOut, "yyyy-MM-dd") : null,
+      nights: bookingCalculations.nights,
+      isValidBooking,
+      roomId,
+    });
+  }, [checkIn, checkOut, bookingCalculations.nights, isValidBooking, roomId]);
 
   return (
     <>
@@ -968,7 +1071,6 @@ useEffect(() => {
             Precio promedio por noche, impuestos y tasas no incluidos.
           </p>
 
-          {/* 🆕 MOSTRAR INFORMACIÓN DE CARGA DE RESERVAS */}
           {isLoadingReservations && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center space-x-2 text-sm text-blue-700">
@@ -994,7 +1096,7 @@ useEffect(() => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* ✅ CALENDARIO DE CHECK-IN CON LEYENDA LATERAL */}
+            {/* Calendario de Check-in */}
             <div>
               <Label>Fecha de Check-in</Label>
               <Popover
@@ -1039,7 +1141,7 @@ useEffect(() => {
               )}
             </div>
 
-            {/* ✅ CALENDARIO DE CHECK-OUT CON LEYENDA LATERAL */}
+            {/* Calendario de Check-out */}
             <div>
               <Label>Fecha de Check-out</Label>
               <Popover
@@ -1189,7 +1291,6 @@ useEffect(() => {
             </button>
           </div>
 
-          {/* 🆕 INDICADORES DE ESTADO EN MÓVIL */}
           {isLoadingReservations && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center space-x-2 text-sm text-blue-700">
@@ -1223,7 +1324,7 @@ useEffect(() => {
             }}
             className="space-y-4"
           >
-            {/* ✅ CALENDARIO MÓVIL CHECK-IN CON LEYENDA Y PRÓXIMAS RESERVAS ABAJO */}
+            {/* Calendarios móviles con estructura similar al desktop */}
             <div>
               <Label>Fecha de Check-in</Label>
               <Popover>
@@ -1252,9 +1353,7 @@ useEffect(() => {
                       initialFocus
                       locale={es}
                     />
-                    {/* LEYENDA PRIMERO EN MÓVIL */}
                     <div className="p-3 bg-gray-50 border-t">
-                      {/* INDICADOR DE CARGA EN MÓVIL */}
                       {isLoadingReservations && (
                         <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
                           <div className="flex items-center space-x-2">
@@ -1285,75 +1384,6 @@ useEffect(() => {
                           <span>Seleccionado</span>
                         </div>
                       </div>
-
-                      {/* PRÓXIMAS RESERVAS ABAJO EN MÓVIL */}
-                      {(() => {
-                        const upcomingReservations = allReservedPeriods
-                          .filter((period) => new Date(period.end) >= today)
-                          .sort(
-                            (a, b) =>
-                              new Date(a.start).getTime() -
-                              new Date(b.start).getTime()
-                          )
-                          .slice(0, 2);
-
-                        if (upcomingReservations.length === 0) return null;
-
-                        return (
-                          <div className="border-t border-gray-200 pt-3">
-                            <h5 className="text-sm font-semibold text-gray-700 mb-2">
-                              Próximas Reservas:
-                            </h5>
-                            <div className="space-y-2 max-h-24 overflow-y-auto">
-                              {upcomingReservations.map(
-                                (reservation, index) => (
-                                  <div
-                                    key={index}
-                                    className="text-xs p-2 bg-white rounded border border-gray-200"
-                                  >
-                                    <div className="font-medium text-gray-800">
-                                      {format(
-                                        new Date(reservation.start),
-                                        "dd/MM",
-                                        { locale: es }
-                                      )}{" "}
-                                      -{" "}
-                                      {format(
-                                        new Date(reservation.end),
-                                        "dd/MM",
-                                        { locale: es }
-                                      )}
-                                    </div>
-                                    {reservation.guestName && (
-                                      <div className="text-gray-500 truncate">
-                                        {reservation.guestName}
-                                      </div>
-                                    )}
-                                    <div className="flex items-center space-x-1 mt-1">
-                                      <div
-                                        className={`w-2 h-2 rounded-full ${
-                                          reservation.status === "confirmed"
-                                            ? "bg-red-500"
-                                            : reservation.status === "pending"
-                                            ? "bg-yellow-400"
-                                            : "bg-blue-400"
-                                        }`}
-                                      ></div>
-                                      <span className="text-gray-400 capitalize">
-                                        {reservation.status === "confirmed"
-                                          ? "Confirmada"
-                                          : reservation.status === "pending"
-                                          ? "Pendiente"
-                                          : "Check-out"}
-                                      </span>
-                                    </div>
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })()}
                     </div>
                   </div>
                 </PopoverContent>
@@ -1366,7 +1396,6 @@ useEffect(() => {
               )}
             </div>
 
-            {/* ✅ CALENDARIO MÓVIL CHECK-OUT CON LEYENDA Y PRÓXIMAS RESERVAS ABAJO */}
             <div>
               <Label>Fecha de Check-out</Label>
               <Popover>
@@ -1400,7 +1429,6 @@ useEffect(() => {
                       initialFocus
                       locale={es}
                     />
-                    {/* LEYENDA PRIMERO EN MÓVIL */}
                     <div className="p-3 bg-gray-50 border-t">
                       <h4 className="text-sm font-semibold text-gray-700 mb-2">
                         Leyenda:
@@ -1499,7 +1527,7 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* ✅ MODAL DE PAGO MEJORADO CON VALIDACIÓN COMPLETA */}
+      {/* ✅ MODAL DE PAGO ACTUALIZADO SIN TARJETA + CON COMPROBANTE */}
       {showPaymentModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -1646,127 +1674,6 @@ useEffect(() => {
               {/* PASO 2: DETALLES DE PAGO */}
               {paymentStep === "details" && (
                 <div className="space-y-6">
-                  {/* Tarjeta de Crédito/Débito */}
-                  {selectedPaymentMethod === "tarjeta" && (
-                    <div className="space-y-4">
-                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                        <div className="flex items-center space-x-2">
-                          <CreditCard className="h-5 w-5 text-orange-600" />
-                          <span className="font-medium text-orange-900">
-                            Información de la Tarjeta
-                          </span>
-                        </div>
-                        <p className="text-sm text-orange-700 mt-1">
-                          Ingresa los datos de tu tarjeta de crédito o débito.
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-4">
-                        <div>
-                          <Label htmlFor="cardNumber">Número de Tarjeta</Label>
-                          <Input
-                            id="cardNumber"
-                            placeholder="1234 5678 9012 3456"
-                            value={paymentDetails.cardNumber}
-                            onChange={(e) => {
-                              const value = e.target.value
-                                .replace(/\s/g, "")
-                                .replace(/(.{4})/g, "$1 ")
-                                .trim()
-                                .slice(0, 19);
-                              setPaymentDetails((prev) => ({
-                                ...prev,
-                                cardNumber: value,
-                              }));
-                            }}
-                            className={
-                              errors.cardNumber ? "border-red-500" : ""
-                            }
-                          />
-                          {errors.cardNumber && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.cardNumber}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <Label htmlFor="expiryDate">Vencimiento</Label>
-                            <Input
-                              id="expiryDate"
-                              placeholder="MM/AA"
-                              value={paymentDetails.expiryDate}
-                              onChange={(e) => {
-                                const value = e.target.value
-                                  .replace(/\D/g, "")
-                                  .replace(/(\d{2})(\d)/, "$1/$2")
-                                  .slice(0, 5);
-                                setPaymentDetails((prev) => ({
-                                  ...prev,
-                                  expiryDate: value,
-                                }));
-                              }}
-                              className={
-                                errors.expiryDate ? "border-red-500" : ""
-                              }
-                            />
-                            {errors.expiryDate && (
-                              <p className="text-red-500 text-sm mt-1">
-                                {errors.expiryDate}
-                              </p>
-                            )}
-                          </div>
-
-                          <div>
-                            <Label htmlFor="cvv">CVV</Label>
-                            <Input
-                              id="cvv"
-                              placeholder="123"
-                              value={paymentDetails.cvv}
-                              onChange={(e) => {
-                                const value = e.target.value
-                                  .replace(/\D/g, "")
-                                  .slice(0, 4);
-                                setPaymentDetails((prev) => ({
-                                  ...prev,
-                                  cvv: value,
-                                }));
-                              }}
-                              className={errors.cvv ? "border-red-500" : ""}
-                            />
-                            {errors.cvv && (
-                              <p className="text-red-500 text-sm mt-1">
-                                {errors.cvv}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div>
-                          <Label htmlFor="cardName">Nombre en la Tarjeta</Label>
-                          <Input
-                            id="cardName"
-                            placeholder="Juan Pérez"
-                            value={paymentDetails.cardName}
-                            onChange={(e) =>
-                              setPaymentDetails((prev) => ({
-                                ...prev,
-                                cardName: e.target.value,
-                              }))
-                            }
-                            className={errors.cardName ? "border-red-500" : ""}
-                          />
-                          {errors.cardName && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.cardName}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Transferencia Bancaria */}
                   {selectedPaymentMethod === "transferencia" && (
                     <div className="space-y-4">
@@ -1797,26 +1704,26 @@ useEffect(() => {
                       </div>
 
                       <div>
-                        <Label htmlFor="transferenceReference">
+                        <Label htmlFor="referencia_transferencia">
                           Número de Referencia
                         </Label>
                         <Input
-                          id="transferenceReference"
+                          id="referencia_transferencia"
                           placeholder="Ej: 123456789012"
-                          value={paymentDetails.transferenceReference}
+                          value={paymentDetails.referencia_transferencia}
                           onChange={(e) =>
                             setPaymentDetails((prev) => ({
                               ...prev,
-                              transferenceReference: e.target.value,
+                              referencia_transferencia: e.target.value,
                             }))
                           }
                           className={
-                            errors.transferenceReference ? "border-red-500" : ""
+                            errors.referencia_transferencia ? "border-red-500" : ""
                           }
                         />
-                        {errors.transferenceReference && (
+                        {errors.referencia_transferencia && (
                           <p className="text-red-500 text-sm mt-1">
-                            {errors.transferenceReference}
+                            {errors.referencia_transferencia}
                           </p>
                         )}
                         <p className="text-xs text-gray-500 mt-1">
@@ -1827,7 +1734,7 @@ useEffect(() => {
                   )}
 
                   {/* Pago Móvil */}
-                  {selectedPaymentMethod === "pago-movil" && (
+                  {selectedPaymentMethod === "pago_movil" && (
                     <div className="space-y-4">
                       <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                         <div className="flex items-center space-x-2">
@@ -1854,11 +1761,11 @@ useEffect(() => {
 
                       <div className="grid grid-cols-1 gap-4">
                         <div>
-                          <Label htmlFor="pagoMovilPhone">Tu Teléfono</Label>
+                          <Label htmlFor="telefono_pago_movil">Tu Teléfono</Label>
                           <Input
-                            id="pagoMovilPhone"
+                            id="telefono_pago_movil"
                             placeholder="0414-123-4567"
-                            value={paymentDetails.pagoMovilPhone}
+                            value={paymentDetails.telefono_pago_movil}
                             onChange={(e) => {
                               const value = e.target.value
                                 .replace(/\D/g, "")
@@ -1866,41 +1773,41 @@ useEffect(() => {
                                 .slice(0, 13);
                               setPaymentDetails((prev) => ({
                                 ...prev,
-                                pagoMovilPhone: value,
+                                telefono_pago_movil: value,
                               }));
                             }}
                             className={
-                              errors.pagoMovilPhone ? "border-red-500" : ""
+                              errors.telefono_pago_movil ? "border-red-500" : ""
                             }
                           />
-                          {errors.pagoMovilPhone && (
+                          {errors.telefono_pago_movil && (
                             <p className="text-red-500 text-sm mt-1">
-                              {errors.pagoMovilPhone}
+                              {errors.telefono_pago_movil}
                             </p>
                           )}
                         </div>
 
                         <div>
-                          <Label htmlFor="pagoMovilReference">
+                          <Label htmlFor="referencia_pago_movil">
                             Número de Referencia
                           </Label>
                           <Input
-                            id="pagoMovilReference"
+                            id="referencia_pago_movil"
                             placeholder="Ej: 123456789"
-                            value={paymentDetails.pagoMovilReference}
+                            value={paymentDetails.referencia_pago_movil}
                             onChange={(e) =>
                               setPaymentDetails((prev) => ({
                                 ...prev,
-                                pagoMovilReference: e.target.value,
+                                referencia_pago_movil: e.target.value,
                               }))
                             }
                             className={
-                              errors.pagoMovilReference ? "border-red-500" : ""
+                              errors.referencia_pago_movil ? "border-red-500" : ""
                             }
                           />
-                          {errors.pagoMovilReference && (
+                          {errors.referencia_pago_movil && (
                             <p className="text-red-500 text-sm mt-1">
-                              {errors.pagoMovilReference}
+                              {errors.referencia_pago_movil}
                             </p>
                           )}
                         </div>
@@ -1909,7 +1816,7 @@ useEffect(() => {
                   )}
 
                   {/* Criptomonedas */}
-                  {selectedPaymentMethod === "crypto" && (
+                  {selectedPaymentMethod === "cripto" && (
                     <div className="space-y-4">
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                         <div className="flex items-center space-x-2">
@@ -1940,51 +1847,51 @@ useEffect(() => {
 
                       <div className="grid grid-cols-1 gap-4">
                         <div>
-                          <Label htmlFor="cryptoWallet">
+                          <Label htmlFor="billetera_cripto">
                             Tu Dirección de Wallet
                           </Label>
                           <Input
-                            id="cryptoWallet"
+                            id="billetera_cripto"
                             placeholder="Ej: bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
-                            value={paymentDetails.cryptoWallet}
+                            value={paymentDetails.billetera_cripto}
                             onChange={(e) =>
                               setPaymentDetails((prev) => ({
                                 ...prev,
-                                cryptoWallet: e.target.value,
+                                billetera_cripto: e.target.value,
                               }))
                             }
                             className={
-                              errors.cryptoWallet ? "border-red-500" : ""
+                              errors.billetera_cripto ? "border-red-500" : ""
                             }
                           />
-                          {errors.cryptoWallet && (
+                          {errors.billetera_cripto && (
                             <p className="text-red-500 text-sm mt-1">
-                              {errors.cryptoWallet}
+                              {errors.billetera_cripto}
                             </p>
                           )}
                         </div>
 
                         <div>
-                          <Label htmlFor="cryptoTxHash">
+                          <Label htmlFor="hash_transaccion_cripto">
                             Hash de Transacción
                           </Label>
                           <Input
-                            id="cryptoTxHash"
+                            id="hash_transaccion_cripto"
                             placeholder="Ej: 1a2b3c4d5e6f7g8h9i0j..."
-                            value={paymentDetails.cryptoTxHash}
+                            value={paymentDetails.hash_transaccion_cripto}
                             onChange={(e) =>
                               setPaymentDetails((prev) => ({
                                 ...prev,
-                                cryptoTxHash: e.target.value,
+                                hash_transaccion_cripto: e.target.value,
                               }))
                             }
                             className={
-                              errors.cryptoTxHash ? "border-red-500" : ""
+                              errors.hash_transaccion_cripto ? "border-red-500" : ""
                             }
                           />
-                          {errors.cryptoTxHash && (
+                          {errors.hash_transaccion_cripto && (
                             <p className="text-red-500 text-sm mt-1">
-                              {errors.cryptoTxHash}
+                              {errors.hash_transaccion_cripto}
                             </p>
                           )}
                         </div>
@@ -2018,50 +1925,50 @@ useEffect(() => {
 
                       <div className="grid grid-cols-1 gap-4">
                         <div>
-                          <Label htmlFor="zelleEmail">Tu Email de Zelle</Label>
+                          <Label htmlFor="email_zelle">Tu Email de Zelle</Label>
                           <Input
-                            id="zelleEmail"
+                            id="email_zelle"
                             type="email"
                             placeholder="tu-email@ejemplo.com"
-                            value={paymentDetails.zelleEmail}
+                            value={paymentDetails.email_zelle}
                             onChange={(e) =>
                               setPaymentDetails((prev) => ({
                                 ...prev,
-                                zelleEmail: e.target.value,
+                                email_zelle: e.target.value,
                               }))
                             }
                             className={
-                              errors.zelleEmail ? "border-red-500" : ""
+                              errors.email_zelle ? "border-red-500" : ""
                             }
                           />
-                          {errors.zelleEmail && (
+                          {errors.email_zelle && (
                             <p className="text-red-500 text-sm mt-1">
-                              {errors.zelleEmail}
+                              {errors.email_zelle}
                             </p>
                           )}
                         </div>
 
                         <div>
-                          <Label htmlFor="zelleReference">
+                          <Label htmlFor="referencia_zelle">
                             Número de Confirmación
                           </Label>
                           <Input
-                            id="zelleReference"
+                            id="referencia_zelle"
                             placeholder="Ej: ZEL123456789"
-                            value={paymentDetails.zelleReference}
+                            value={paymentDetails.referencia_zelle}
                             onChange={(e) =>
                               setPaymentDetails((prev) => ({
                                 ...prev,
-                                zelleReference: e.target.value,
+                                referencia_zelle: e.target.value,
                               }))
                             }
                             className={
-                              errors.zelleReference ? "border-red-500" : ""
+                              errors.referencia_zelle ? "border-red-500" : ""
                             }
                           />
-                          {errors.zelleReference && (
+                          {errors.referencia_zelle && (
                             <p className="text-red-500 text-sm mt-1">
-                              {errors.zelleReference}
+                              {errors.referencia_zelle}
                             </p>
                           )}
                         </div>
@@ -2069,11 +1976,112 @@ useEffect(() => {
                     </div>
                   )}
 
+                  {/* 🆕 SECCIÓN DE COMPROBANTE DE PAGO */}
+                  <div className="border-t border-gray-200 pt-6">
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                      <div className="flex items-center space-x-2">
+                        <Upload className="h-5 w-5 text-amber-600" />
+                        <span className="font-medium text-amber-900">
+                          Comprobante de Pago
+                        </span>
+                      </div>
+                      <p className="text-sm text-amber-700 mt-1">
+                        Sube una imagen o PDF del comprobante de tu pago para verificar la transacción.
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="comprobante">
+                        Archivo de Comprobante *
+                      </Label>
+                      <div className="mt-2">
+                        <input
+                          id="comprobante"
+                          type="file"
+                          accept="image/*,.pdf"
+                          onChange={handleComprobanteChange}
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 border border-gray-300 rounded-lg p-2"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">
+                          Formatos permitidos: JPG, PNG, GIF, PDF (máximo 5MB)
+                        </p>
+                      </div>
+                      
+                      {errors.comprobante && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.comprobante}
+                        </p>
+                      )}
+
+                      {/* Preview del archivo */}
+                      {comprobanteFile && (
+                        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex-shrink-0">
+                              {comprobantePreview ? (
+                                <img
+                                  src={comprobantePreview}
+                                  alt="Preview"
+                                  className="w-16 h-16 object-cover rounded-lg"
+                                />
+                              ) : (
+                                <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+                                  <span className="text-xs text-gray-500">PDF</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-green-900 truncate">
+                                {comprobanteFile.name}
+                              </p>
+                              <p className="text-xs text-green-700">
+                                {(comprobanteFile.size / 1024 / 1024).toFixed(2)} MB
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setComprobanteFile(null);
+                                setComprobantePreview(null);
+                                const input = document.getElementById('comprobante') as HTMLInputElement;
+                                if (input) input.value = '';
+                              }}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Error de envío si existe */}
+                  {errors.submit && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-2">
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                        <span className="font-medium text-red-900">Error</span>
+                      </div>
+                      <p className="text-sm text-red-700 mt-1">
+                        {errors.submit}
+                      </p>
+                    </div>
+                  )}
+
                   <Button
                     onClick={handlePaymentComplete}
-                    className="w-full bg-red-600 hover:bg-red-700 text-white py-3"
+                    disabled={isSubmittingReservation}
+                    className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white py-3"
                   >
-                    Continuar
+                    {isSubmittingReservation ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Procesando...</span>
+                      </div>
+                    ) : (
+                      "Continuar"
+                    )}
                   </Button>
                 </div>
               )}
@@ -2096,30 +2104,30 @@ useEffect(() => {
 
                   <div className="grid grid-cols-1 gap-4">
                     <div>
-                      <Label htmlFor="guestName">Nombre Completo *</Label>
+                      <Label htmlFor="nombre_completo">Nombre Completo *</Label>
                       <Input
-                        id="guestName"
+                        id="nombre_completo"
                         placeholder="Juan Pérez"
-                        value={guestInfo.name}
+                        value={guestInfo.nombre_completo}
                         onChange={(e) =>
                           setGuestInfo((prev) => ({
                             ...prev,
-                            name: e.target.value,
+                            nombre_completo: e.target.value,
                           }))
                         }
-                        className={errors.name ? "border-red-500" : ""}
+                        className={errors.nombre_completo ? "border-red-500" : ""}
                       />
-                      {errors.name && (
+                      {errors.nombre_completo && (
                         <p className="text-red-500 text-sm mt-1">
-                          {errors.name}
+                          {errors.nombre_completo}
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <Label htmlFor="guestEmail">Email *</Label>
+                      <Label htmlFor="email">Email *</Label>
                       <Input
-                        id="guestEmail"
+                        id="email"
                         type="email"
                         placeholder="juan@ejemplo.com"
                         value={guestInfo.email}
@@ -2139,61 +2147,67 @@ useEffect(() => {
                     </div>
 
                     <div>
-                      <Label htmlFor="guestPhone">Teléfono *</Label>
+                      <Label htmlFor="telefono">Teléfono *</Label>
                       <Input
-                        id="guestPhone"
+                        id="telefono"
                         placeholder="0414-123-4567"
-                        value={guestInfo.phone}
+                        value={guestInfo.telefono}
                         onChange={(e) =>
                           setGuestInfo((prev) => ({
                             ...prev,
-                            phone: e.target.value,
+                            telefono: e.target.value,
                           }))
                         }
-                        className={errors.phone ? "border-red-500" : ""}
+                        className={errors.telefono ? "border-red-500" : ""}
                       />
-                      {errors.phone && (
+                      {errors.telefono && (
                         <p className="text-red-500 text-sm mt-1">
-                          {errors.phone}
+                          {errors.telefono}
                         </p>
                       )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Formato: 04141234567, 02121234567 o +584141234567
+                      </p>
                     </div>
 
                     <div>
-                      <Label htmlFor="guestDocument">
+                      <Label htmlFor="documento_identidad">
                         Documento de Identidad *
                       </Label>
                       <Input
-                        id="guestDocument"
+                        id="documento_identidad"
                         placeholder="V-12.345.678 o E-12345678"
-                        value={guestInfo.document}
+                        value={guestInfo.documento_identidad}
                         onChange={(e) =>
                           setGuestInfo((prev) => ({
                             ...prev,
-                            document: e.target.value,
+                            documento_identidad: e.target.value,
                           }))
                         }
-                        className={errors.document ? "border-red-500" : ""}
+                        className={errors.documento_identidad ? "border-red-500" : ""}
                       />
-                      {errors.document && (
+                      {errors.documento_identidad && (
                         <p className="text-red-500 text-sm mt-1">
-                          {errors.document}
+                          {errors.documento_identidad}
                         </p>
                       )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Formato: V-12345678, E-12345678, J-12345678, P-12345678
+                      </p>
                     </div>
 
                     <div>
-                      <Label htmlFor="guestNotes">
+                      <Label htmlFor="comentarios_adicionales">
                         Comentarios Adicionales (Opcional)
                       </Label>
                       <textarea
-                        id="guestNotes"
+                        id="comentarios_adicionales"
                         placeholder="Solicitudes especiales, alergias, etc."
-                        value={guestInfo.notes}
+                        value={guestInfo.comentarios_adicionales}
                         onChange={(e) =>
                           setGuestInfo((prev) => ({
                             ...prev,
-                            notes: e.target.value,
+                            comentarios_adicionales: e.target.value,
                           }))
                         }
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
@@ -2239,12 +2253,32 @@ useEffect(() => {
                     </div>
                   </div>
 
+                  {/* Error de envío si existe */}
+                  {errors.submit && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-2">
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                        <span className="font-medium text-red-900">Error</span>
+                      </div>
+                      <p className="text-sm text-red-700 mt-1">
+                        {errors.submit}
+                      </p>
+                    </div>
+                  )}
+
                   <Button
                     onClick={handlePaymentComplete}
-                    disabled={!termsAccepted}
+                    disabled={!termsAccepted || isSubmittingReservation}
                     className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3"
                   >
-                    Confirmar Reserva
+                    {isSubmittingReservation ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        <span>Confirmando Reserva...</span>
+                      </div>
+                    ) : (
+                      "Confirmar Reserva"
+                    )}
                   </Button>
                 </div>
               )}
@@ -2253,8 +2287,8 @@ useEffect(() => {
               {paymentStep === "success" && (
                 <div className="text-center space-y-6">
                   <div className="flex justify-center">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                      <CheckCircle className="h-12 w-12 text-green-600" />
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                      <CheckCircle className="h-10 w-10 text-green-600" />
                     </div>
                   </div>
 
@@ -2263,29 +2297,16 @@ useEffect(() => {
                       ¡Reserva Confirmada!
                     </h3>
                     <p className="text-gray-600">
-                      Tu reserva ha sido procesada exitosamente. Recibirás un
-                      email de confirmación en breve.
+                      Tu reserva ha sido procesada exitosamente. Recibirás un email de confirmación en breve.
                     </p>
                   </div>
 
-                  {/* Detalles de la reserva confirmada */}
+                  {/* Resumen de la reserva */}
                   <div className="bg-gray-50 rounded-lg p-6 text-left">
                     <h4 className="font-semibold text-gray-900 mb-4">
                       Detalles de tu Reserva:
                     </h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">
-                          Número de Reserva:
-                        </span>
-                        <span className="font-medium">
-                          #
-                          {Math.random()
-                            .toString(36)
-                            .substr(2, 9)
-                            .toUpperCase()}
-                        </span>
-                      </div>
+                    <div className="space-y-3 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-600">Check-in:</span>
                         <span className="font-medium">
@@ -2300,126 +2321,70 @@ useEffect(() => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Huéspedes:</span>
-                        <span className="font-medium">
-                          {guests}{" "}
-                          {parseInt(guests) === 1 ? "Huésped" : "Huéspedes"}
-                        </span>
+                        <span className="font-medium">{guests}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Noches:</span>
-                        <span className="font-medium">
-                          {bookingCalculations.nights}
-                        </span>
+                        <span className="font-medium">{bookingCalculations.nights}</span>
                       </div>
-                      <div className="border-t border-gray-200 pt-3">
-                        <div className="flex justify-between font-bold text-lg">
-                          <span>Total Pagado:</span>
-                          <span className="text-green-600">
-                            ${bookingCalculations.total}
-                          </span>
-                        </div>
+                      <div className="flex justify-between border-t pt-3">
+                        <span className="text-gray-600">Total Pagado:</span>
+                        <span className="font-bold text-lg">${bookingCalculations.total}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Información importante */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-start space-x-3">
-                      <InfoIcon className="h-5 w-5 text-blue-600 mt-0.5" />
-                      <div className="text-left">
-                        <h4 className="font-medium text-blue-900 mb-2">
-                          Información Importante:
-                        </h4>
-                        <ul className="text-sm text-blue-700 space-y-1">
-                          <li>• Check-in: 3:00 PM - 11:00 PM</li>
-                          <li>• Check-out: 7:00 AM - 12:00 PM</li>
-                          <li>
-                            • Presenta tu documento de identidad al llegar
-                          </li>
-                          <li>• Política de cancelación: 24 horas antes</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                      onClick={() => {
-                        // Aquí podrías generar un PDF o enviar por email
-                        alert(
-                          "Función de descarga de comprobante en desarrollo"
-                        );
-                      }}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Descargar Comprobante
-                    </Button>
+                  <div className="space-y-3">
                     <Button
                       onClick={closePaymentModal}
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                      className="w-full bg-red-600 hover:bg-red-700 text-white py-3"
                     >
                       Cerrar
                     </Button>
+                    <p className="text-xs text-gray-500">
+                      Se ha enviado un email de confirmación a {guestInfo.email}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Resumen de reserva en la barra lateral */}
+              {paymentStep !== "success" && (
+                <div className="border-t border-gray-200 pt-6 mt-6">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-3">
+                      Resumen de Reserva
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Check-in:</span>
+                        <span>{checkIn ? formatDateShort(checkIn) : "No seleccionado"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Check-out:</span>
+                        <span>{checkOut ? formatDateShort(checkOut) : "No seleccionado"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Huéspedes:</span>
+                        <span>{guests}</span>
+                      </div>
+                      {isValidBooking && (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Noches:</span>
+                            <span>{bookingCalculations.nights}</span>
+                          </div>
+                          <div className="flex justify-between border-t pt-2 font-semibold">
+                            <span>Total:</span>
+                            <span>${bookingCalculations.total}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
             </div>
-
-            {/* Resumen de reserva lateral (solo visible en pasos 1-3) */}
-            {paymentStep !== "success" && (
-              <div className="border-t border-gray-200 p-6 bg-gray-50">
-                <h3 className="font-semibold text-gray-900 mb-4">
-                  Resumen de Reserva
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Habitación:</span>
-                    <span className="font-medium">Suite Premium</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Fechas:</span>
-                    <span className="font-medium">
-                      {checkIn && checkOut
-                        ? `${formatDateShort(checkIn)} - ${formatDateShort(
-                            checkOut
-                          )}`
-                        : "No seleccionadas"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Huéspedes:</span>
-                    <span className="font-medium">
-                      {guests}{" "}
-                      {parseInt(guests) === 1 ? "Huésped" : "Huéspedes"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Noches:</span>
-                    <span className="font-medium">
-                      {bookingCalculations.nights}
-                    </span>
-                  </div>
-                  <div className="border-t border-gray-200 pt-3">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Subtotal:</span>
-                      <span>${bookingCalculations.subtotal}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Impuestos:</span>
-                      <span>${bookingCalculations.taxes}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg border-t border-gray-200 pt-2 mt-2">
-                      <span>Total:</span>
-                      <span className="text-red-600">
-                        ${bookingCalculations.total}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}

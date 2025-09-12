@@ -32,33 +32,35 @@ export const DishCard: React.FC<DishCardProps> = ({
       <div className="absolute top-3 right-3 flex space-x-2">
         <button
           onClick={() => onToggleFavorite(dish.id)}
-          className={`p-2 rounded-full backdrop-blur-md transition-all duration-200 transform hover:scale-110 ${
-            isFavorite
+          className={`p-2 rounded-full backdrop-blur-md transition-all duration-200 transform hover:scale-110 ${isFavorite
               ? "bg-red-500 text-white shadow-lg"
               : "bg-white/90 text-gray-600 hover:bg-white shadow-md"
-          }`}
+            }`}
         >
           <Heart className={`w-4 h-4 ${isFavorite ? "fill-current" : ""}`} />
         </button>
       </div>
 
       <div className="absolute top-3 left-3 flex flex-col space-y-1 min-h-[60px]">
-        {dish.isVegetarian && (
+        {dish.isVegetarian ? (
           <Badge className="bg-green-500/90 text-white text-xs backdrop-blur-sm">
             Vegetariano
           </Badge>
-        )}
-        {dish.isGlutenFree && (
+        ) : null}
+
+        {dish.isGlutenFree ? (
           <Badge className="bg-blue-500/90 text-white text-xs backdrop-blur-sm">
             Sin Gluten
           </Badge>
-        )}
-        {dish.isSpicy && (
+        ) : null}
+
+        {dish.isSpicy ? (
           <Badge className="bg-red-500/90 text-white text-xs backdrop-blur-sm">
             Picante
           </Badge>
-        )}
+        ) : null}
       </div>
+
     </div>
 
     <CardContent className="p-4 sm:p-6 flex-1 flex flex-col">
@@ -99,11 +101,10 @@ export const DishCard: React.FC<DishCardProps> = ({
       <div className="mt-auto">
         <Button
           onClick={() => onToggleCart(dish.id)}
-          className={`w-full transition-all duration-200 font-semibold py-2.5 sm:py-3 ${
-            isInCart
+          className={`w-full transition-all duration-200 font-semibold py-2.5 sm:py-3 ${isInCart
               ? "bg-green-600 hover:bg-green-700 shadow-lg"
               : "bg-orange-600 hover:bg-orange-700 shadow-lg hover:shadow-xl"
-          }`}
+            }`}
           size="lg"
         >
           <ShoppingCart className="w-4 h-4 mr-2" />
