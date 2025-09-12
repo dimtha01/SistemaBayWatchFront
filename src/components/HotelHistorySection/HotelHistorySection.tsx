@@ -227,7 +227,7 @@ export const HotelHistorySection = () => {
 
               <div className="space-y-3">
                 <p className="text-sm sm:text-base text-[#0D0D0D] leading-relaxed">
-                  Fundado en 1985, el <strong>Hotel BookMe</strong> comenzó como un pequeño 
+                  Fundado en 1985, el <strong>Hotel BayWatch</strong> comenzó como un pequeño 
                   establecimiento familiar con la visión de ofrecer una experiencia de 
                   hospitalidad inigualable. A lo largo de las décadas, hemos crecido y 
                   nos hemos modernizado, pero siempre manteniendo la calidez y el 
@@ -251,12 +251,6 @@ export const HotelHistorySection = () => {
 
             {/* Call to Action - CORREGIDO CON MÚLTIPLES OPCIONES */}
             <div className="flex flex-col sm:flex-row gap-3">
-              <Link to="/aboutUsGalery">
-                <Button className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#F20C1F] to-[#D10000] text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 transform hover:scale-105 text-sm">
-                  <ImageIcon className="w-4 h-4 mr-2" />
-                  Conocer Más
-                </Button>
-              </Link>
 
               
               <Button 

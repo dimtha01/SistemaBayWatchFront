@@ -1,5 +1,4 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   MapPin,
   DollarSign,
@@ -219,22 +218,6 @@ export const TourPackagesSection = () => {
                     <span className="text-xs bg-[#020659]/10 text-[#0D0D0D] px-2 py-1 rounded-full">
                       {pkg.bestFor}
                     </span>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 border-[#0D0D0D] text-[#0D0D0D] hover:bg-[#020659]/10 hover:border-[#0D0D0D] transition-colors group"
-                    >
-                      Ver Detalles
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1 bg-gradient-to-r from-[#F20C0C] to-[#F20C1F] hover:from-[#D10000] text-white border-0 shadow-md hover:shadow-lg transition-all duration-300"
-                    >
-                      Reservar
-                    </Button>
                   </div>
                 </div>
               </CardContent>

@@ -28,7 +28,7 @@ export const Header = () => {
 
   // Cerrar menú de usuario al hacer clic fuera
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handleClickOutside = (event: { target: any; }) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
@@ -44,7 +44,7 @@ export const Header = () => {
     { to: "/services", label: "Servicios" },
     { to: "/experiences", label: "Experiencias" },
     { to: "/about-us", label: "Sobre Nosotros" },
-    { to: "/contact", label: "Contacto" },
+    // { to: "/contact", label: "Contacto" },
   ];
 
   const userMenuItems = [
