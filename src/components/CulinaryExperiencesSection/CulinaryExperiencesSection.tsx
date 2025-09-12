@@ -1,5 +1,4 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { CalendarDays, Leaf, Clock, Users, Star, Wine, ChefHat } from "lucide-react";
 import { diningExperiences, type DiningExperience } from './experiences.data';
 import { motion } from "framer-motion";
@@ -174,25 +173,6 @@ export const CulinaryExperiencesSection = () => {
 
                     {/* Buttons */}
                     <div className="mt-auto">
-                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-3 sm:mb-4">
-                        {/* Botón Ver Detalles - NAVEGACIÓN A PÁGINA */}
-                        <Button
-                          variant="outline" 
-                          onClick={() => handleViewDetails(experience)} // Navegación programática 
-                          className="flex-1 border-gray-300 text-gray-700 hover:bg-[#F20C1F]/5 hover:border-[#F20C1F] hover:text-[#F20C1F] transition-all duration-300 text-xs sm:text-sm py-2 sm:py-2.5"
-                        >
-                          Ver Detalles
-                        </Button>
-                        
-                        {/* Botón Reservar - MODAL */}
-                        <Button 
-                          onClick={() => handleReserveNow(experience)}
-                          className="flex-1 bg-[#F20C1F] hover:bg-[#F20C1F]/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-xs sm:text-sm py-2 sm:py-2.5"
-                        >
-                          Reservar Ahora
-                        </Button>
-                      </div>
-
                       {/* Footer Info */}
                       <div className="pt-3 sm:pt-4 border-t border-gray-100 text-xs text-gray-500 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
                         <span className="flex items-center gap-1">
