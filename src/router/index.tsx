@@ -15,6 +15,8 @@ import { FullMenuPage } from "@/pages/FullMenuPage";
 import { AboutUsGaleryPage } from "@/pages/AboutUsGaleryPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { ExperienceDetailsPage } from "@/pages/ExperienceDetailsPage";
+import { GestionHotelDashboard } from "@/pages/GestionHotelDashboard";
+import { ReservaHabitacionDashboard } from "@/pages/ResevacionHotelDashboard";
 
 export const router = createBrowserRouter([
   {
@@ -76,5 +78,13 @@ export const router = createBrowserRouter([
         element: <AboutUsGaleryPage />,
       },
     ],
-  }
+  },
+  {
+    path: "/GestionHotelDashboard",
+    element: <GestionHotelDashboard />,
+  },
+  {
+    path: "/ReservaHabitacionDashboard",
+    element: <ReservaHabitacionDashboard />,
+  },
 ]);
