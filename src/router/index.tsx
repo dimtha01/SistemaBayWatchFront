@@ -14,15 +14,8 @@ import RoomDetailsPage from "@/pages/RoomDetailsPage";
 import { FullMenuPage } from "@/pages/FullMenuPage";
 import { AboutUsGaleryPage } from "@/pages/AboutUsGaleryPage";
 import { LoginPage } from "@/pages/LoginPage";
-import { DashboardLayout } from "@/layouts/DashboardLayout";
-import { DashboardPage } from "@/pages/DashboardPage";
 import { ExperienceDetailsPage } from "@/pages/ExperienceDetailsPage";
-import { MainteincePage } from "@/pages/MainteincePage";
-import { RoomsPage } from "@/pages/RoomsPage";
-import { GestionLayout } from "@/layouts/GestionLayout"
-// import { RecepcionLayout } from "@/layouts/RecepcionLayout";
 
-// Configuración de rutas
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -83,33 +76,5 @@ export const router = createBrowserRouter([
         element: <AboutUsGaleryPage />,
       },
     ],
-  },
-  {
-    path: "/dashboard",
-    element: <DashboardLayout />,
-    errorElement: <ErrorPage />,
-    children: [
-      {
-        path: "/dashboard",
-        element: <DashboardPage />,
-        index: true,
-      },
-      {
-        path: "/dashboard/mantenimiento",
-        element: <MainteincePage />,
-      },
-    ],
-  },
-  {
-    path: "/gestion",
-    element: <GestionLayout/>,
-    errorElement: <ErrorPage />,
-    children: [
-      {
-        path: "/gestion",
-        element: <RoomsPage />,
-        index: true,
-      },
-    ],
-  },
+  }
 ]);
