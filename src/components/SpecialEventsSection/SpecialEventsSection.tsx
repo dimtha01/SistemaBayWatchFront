@@ -155,9 +155,6 @@ export const SpecialEventsSection = () => {
                       {event.ageRestriction}
                     </span>
                   </div>
-                  <Button className="w-full bg-[#F20C1F] hover:bg-[#F20C0C] text-white font-semibold transition-all duration-300 hover:shadow-md">
-                    Reservar Ahora
-                  </Button>
                 </div>
               </CardContent>
             </Card>

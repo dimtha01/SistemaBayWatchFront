@@ -191,9 +191,6 @@ export const HotelActivitiesSection = () => {
                       {activity.ageRestriction}
                     </span>
                   </div>
-                  <Button className="w-full bg-[#F20C1F] hover:bg-[#F20C0C] text-white transition-colors">
-                    Reservar Ahora
-                  </Button>
                 </div>
               </CardContent>
             </Card>

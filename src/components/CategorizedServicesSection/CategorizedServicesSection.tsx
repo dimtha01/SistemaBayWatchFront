@@ -396,25 +396,6 @@ export const CategorizedServicesSection = () => {
                           )}
                         </div>
                       </div>
-
-                      {/* Actions */}
-                      <div className="relative z-10 flex flex-col sm:flex-row gap-2 mt-4 sm:mt-6 pt-4 border-t border-gray-200">
-                        <Button
-                          size="sm"
-                          className={`flex-1 bg-gradient-to-r ${categoryData.color} text-white hover:shadow-lg transition-all duration-300`}
-                        >
-                          <Calendar className="w-3 h-3 mr-2" />
-                          Reservar
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="flex-1 text-[#0D0D0D] border-[#F20C1F] hover:bg-[#F20C1F] hover:text-white transition-all duration-300"
-                        >
-                          <Eye className="w-3 h-3 mr-2" />
-                          Ver Más
-                        </Button>
-                      </div>
                     </CardContent>
                   </Card>
                 </motion.div>

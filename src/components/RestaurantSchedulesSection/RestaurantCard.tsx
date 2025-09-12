@@ -38,11 +38,11 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
             <ScheduleList outlet={outlet} />
           </div>
 
-          <ActionButton
+          {/* <ActionButton
             outlet={outlet}
             isAvailable={isAvailable}
             onSelect={onSelect}
-          />
+          /> */}
         </CardContent>
       </Card>
     </motion.div>

@@ -245,13 +245,6 @@ export const PremiumServicesSection = () => {
                       </div>
 
                       {/* CTA Button */}
-                      <Button
-                        onClick={() => openModal(service)}
-                        className="w-full bg-gradient-to-r from-[#F20C0C] to-[#F20C1F] hover:from-[#D10000] hover:to-[#D10000] text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl group-hover:scale-105"
-                      >
-                        <Send className="w-4 h-4 mr-2" />
-                        Solicitar Servicio
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>

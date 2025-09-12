@@ -19,20 +19,22 @@ export const schedulesData = [
     type: "restaurant"
   },
   {
-    id: "b1",
-    name: "Bar 'La Terraza'",
-    description: "Disfruta de cócteles exclusivos y vistas panorámicas.",
-    fullDescription: "Rooftop bar con las mejores vistas de la ciudad. Cócteles artesanales, ambiente relajado y música en vivo los fines de semana.",
-    image: "/images/Bar 'La Terraza'.webp",
-    rating: 4.8,
-    capacity: "2-12 personas",
-    location: "Azotea - Piso 15",
-    specialties: ["Cócteles Signature", "Vinos Premium", "Tapas Gourmet"],
+    id: "b2",
+    name: "Bar 'El Refugio'",
+    description: "Ambiente íntimo con cócteles clásicos y música jazz.",
+    fullDescription: "Bar de estilo speakeasy con decoración vintage. Especializado en cócteles clásicos preparados por mixólogos expertos. Ambiente tenue con música jazz en vivo y una selección premium de whiskies y rones añejos.",
+    image: "/images/restaurante.webp",
+    rating: 4.6,
+    capacity: "2-8 personas",
+    location: "Planta Baja - Zona Lounge",
+    specialties: ["Cócteles Clásicos", "Whiskies Premium", "Música Jazz en Vivo"],
     schedule: [
-      { day: "Todos los días", time: "11:00 - 00:00", available: false, capacity: 0, reason: "Mantenimiento programado" }
+      { day: "Lunes a Miércoles", time: "18:00 - 01:00", available: true, capacity: 8, reason: null },
+      { day: "Jueves a Sábado", time: "17:00 - 02:00", available: true, capacity: 8, reason: null },
+      { day: "Domingo", time: "19:00 - 00:00", available: false, capacity: 0, reason: "Evento privado" }
     ],
-    isOpen: false,
-    maintenanceMode: true,
+    isOpen: true,
+    maintenanceMode: false,
     type: "bar"
   },
   {
